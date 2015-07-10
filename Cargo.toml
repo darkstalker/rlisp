@@ -1,0 +1,4 @@
+[package]
+name = "rlisp"
+version = "0.0.1"
+authors = ["darkstalker <slayerbeast@gmail.com>"]
