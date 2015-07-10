@@ -28,7 +28,11 @@ impl<'a> Parser<'a>
         match self.next_token() {
             Token::Lparen => self.parse_list(),
             Token::Rparen => Err(ParseError::UnexpectedRparen),
-            Token::Quote => Ok(Value::quote(try!(self.parse_value()))),
+            Token::Quote => match self.parse_value() {
+                Ok(val) => Ok(Value::quote(val)),
+                Err(ParseError::EndOfStream) => Err(ParseError::NoQuoteArg),
+                Err(e) => Err(e),
+            },
             Token::Number(val) => Ok(Value::Number(val)),
             Token::Ident(val) => Ok(Value::Ident(val)),
             Token::String(val) => Ok(Value::String(val)),

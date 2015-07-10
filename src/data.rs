@@ -57,6 +57,7 @@ pub enum ParseError
     InvalidNumber,
     UnclosedList,
     UnexpectedRparen,
+    NoQuoteArg,
     EndOfStream,
 }
 
@@ -69,6 +70,7 @@ impl Error for ParseError
             ParseError::InvalidNumber => "Invalid number literal",
             ParseError::UnclosedList => "Unclosed list",
             ParseError::UnexpectedRparen => "Unexpected ')'",
+            ParseError::NoQuoteArg => "Missing quote argument",
             ParseError::EndOfStream => "End of stream",
         }
     }
