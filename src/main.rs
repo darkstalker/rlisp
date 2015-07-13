@@ -2,10 +2,14 @@ extern crate rlisp;
 
 use std::error::Error;
 use rlisp::parser::Parser;
+use rlisp::scope::GlobalScope;
 
 fn main()
 {
     let mut stdin = std::io::stdin();
+    let mut env = GlobalScope::new();
+    env.load_stdlib();
+
     loop
     {
         let mut text = String::new();
@@ -16,7 +20,13 @@ fn main()
         }
 
         match Parser::new(&text).parse() {
-            Ok(vs) => for val in vs { println!("expr: {}", val) },
+            Ok(vs) => for val in vs
+            {
+                match val.eval(&mut env) {
+                    Ok(v) => println!("Result: {}", v),
+                    Err(e) => println!("Error: {:?}", e),
+                }
+            },
             Err(e) => println!("Error: {}", e),
         }
     }

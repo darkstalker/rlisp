@@ -1,5 +1,5 @@
 use std::mem;
-use data::{Token, Value, ParseError};
+use data::{Token, Value, Cons, ParseError};
 use lexer::Tokenizer;
 
 pub struct Parser<'a>
@@ -29,7 +29,7 @@ impl<'a> Parser<'a>
             Token::Lparen => self.parse_list(),
             Token::Rparen => Err(ParseError::UnexpectedRparen),
             Token::Quote => match self.parse_value() {
-                Ok(val) => Ok(Value::quote(val)),
+                Ok(val) => Ok(val.quote()),
                 Err(ParseError::EndOfStream) => Err(ParseError::NoQuoteArg),
                 Err(e) => Err(e),
             },
@@ -54,7 +54,7 @@ impl<'a> Parser<'a>
             list.push(try!(self.parse_value()));
         }
         self.next_token();  // consume the ')'
-        Ok(Value::List(list))
+        Ok(Value::List(Cons::from_vec(list)))
     }
 
     // parses the entire chunk

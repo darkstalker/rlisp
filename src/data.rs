@@ -1,5 +1,6 @@
 use std::fmt;
 use std::error::Error;
+use std::rc::Rc;
 
 #[derive(Debug, PartialEq)]
 pub enum Token
@@ -14,20 +15,25 @@ pub enum Token
     End,    // end of string
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Value
 {
+    Nil,
     Number(f64),
     Ident(String),
     String(String),
-    List(Vec<Value>),
+    Builtin(BuiltinFn, bool),
+    List(Option<Rc<Cons>>),
 }
 
-impl Value
+#[derive(Clone)]
+pub struct BuiltinFn(pub Rc<Fn(&Option<Rc<Cons>>) -> Result<Value, RuntimeError>>);
+
+impl fmt::Debug for BuiltinFn
 {
-    pub fn quote(val: Value) -> Value
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result
     {
-        Value::List(vec![Value::Ident("quote".to_string()), val])
+        write!(f, "<BuiltinFn>")
     }
 }
 
@@ -36,18 +42,59 @@ impl fmt::Display for Value
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result
     {
         match *self {
+            Value::Nil => write!(f, "#<Nil>"),
             Value::Number(ref val) => write!(f, "{}", val),
             Value::Ident(ref val) => write!(f, "{}", val),
             Value::String(ref val) => write!(f, "\"{}\"", val),
-            Value::List(ref lst) => {
-                let mut it = lst.iter();
-                match it.next() {
-                    Some(val) => write!(f, "({})", it.fold(format!("{}", val), |acc, val| acc + &format!(" {}", val))),
-                    None => write!(f, "()"),
-                }
+            Value::Builtin(_, _) => write!(f, "#<BuiltinFn>"),
+            Value::List(ref opt) => match *opt {
+                Some(ref val) => write!(f, "({})", val),
+                None => write!(f, "()"),
             }
         }
     }
+}
+
+#[derive(Debug, Clone)]
+pub struct Cons
+{
+    pub car: Value,
+    pub cdr: Option<Rc<Cons>>,
+}
+
+impl Cons
+{
+    pub fn new(car: Value, cdr: Option<Rc<Cons>>) -> Option<Rc<Cons>>
+    {
+        Some(Rc::new(Cons{ car: car, cdr: cdr }))
+    }
+
+    pub fn from_vec(mut vec: Vec<Value>) -> Option<Rc<Cons>>
+    {
+        let mut cdr = None;
+        while let Some(car) = vec.pop()
+        {
+            cdr = Cons::new(car, cdr);
+        }
+        cdr
+    }
+}
+
+impl fmt::Display for Cons
+{
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result
+    {
+        match *self {
+            Cons{ ref car, cdr: None } => write!(f, "{}", car),
+            Cons{ ref car, cdr: Some(ref next) } => write!(f, "{} {}", car, next),
+        }
+    }
+}
+
+pub trait Scope<'a>
+{
+    fn get(&self, key: &str) -> Option<Value>;
+    fn set(&mut self, key: &'a str, val: Value);
 }
 
 #[derive(Debug, PartialEq)]
@@ -82,4 +129,14 @@ impl fmt::Display for ParseError
     {
         write!(f, "{}", self.description())
     }
+}
+
+#[derive(Debug)]
+pub enum RuntimeError
+{
+    UnkIdent(String),
+    InvalidCall,
+    MissingArgs,
+    InvalidArg,
+    Unimplemented,
 }
