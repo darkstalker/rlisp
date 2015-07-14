@@ -103,10 +103,10 @@ impl fmt::Display for Cons
     }
 }
 
-pub trait Scope<'a>
+pub trait Scope
 {
     fn get(&self, key: &str) -> Option<Value>;
-    fn set(&mut self, key: &'a str, val: Value);
+    fn set(&mut self, key: &str, val: Value);
 }
 
 #[derive(Debug, PartialEq)]

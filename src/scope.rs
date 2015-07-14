@@ -4,24 +4,24 @@ use data::{Value, Cons, Scope, BuiltinFn, RuntimeError};
 use builtins;
 
 #[derive(Debug)]
-pub struct GlobalScope<'a>
+pub struct GlobalScope
 {
-    dict: HashMap<&'a str, Value>,
+    dict: HashMap<String, Value>,
 }
 
-impl<'a> GlobalScope<'a>
+impl GlobalScope
 {
-    pub fn new() -> GlobalScope<'a>
+    pub fn new() -> GlobalScope
     {
         GlobalScope{ dict: HashMap::new() }
     }
 
-    pub fn set_number(&mut self, key: &'a str, val: f64)
+    pub fn set_number(&mut self, key: &str, val: f64)
     {
         self.set(key, Value::Number(val))
     }
 
-    pub fn set_string(&mut self, key: &'a str, val: &str)
+    pub fn set_string(&mut self, key: &str, val: &str)
     {
         self.set(key, Value::String(Rc::new(val.to_string())))
     }
@@ -39,15 +39,15 @@ impl<'a> GlobalScope<'a>
     }
 }
 
-impl<'a> Scope<'a> for GlobalScope<'a>
+impl Scope for GlobalScope
 {
     fn get(&self, key: &str) -> Option<Value>
     {
         self.dict.get(key).map(|v| v.clone())
     }
 
-    fn set(&mut self, key: &'a str, val: Value)
+    fn set(&mut self, key: &str, val: Value)
     {
-        self.dict.insert(key, val);
+        self.dict.insert(key.to_string(), val);
     }
 }
