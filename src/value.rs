@@ -8,7 +8,7 @@ impl Value
         match *self {
             Value::Nil => "Nil",
             Value::Number(_) => "Number",
-            Value::Ident(_) => "Ident",
+            Value::Symbol(_) => "Symbol",
             Value::String(_) => "String",
             Value::Builtin(_) => "Builtin",
             Value::List(_) => "List",
@@ -17,13 +17,13 @@ impl Value
 
     pub fn quote(self) -> Value
     {
-        Value::List(Cons::new(Value::Ident(Rc::new("quote".to_string())), Cons::new(self, None)))
+        Value::List(Cons::new(Value::Symbol(Rc::new("quote".to_string())), Cons::new(self, None)))
     }
 
     pub fn eval(&self, env: &Scope) -> Result<Value, RuntimeError>
     {
         match *self {
-            Value::Ident(ref name) => env.get(name).ok_or(RuntimeError::UnkIdent(name.clone())),
+            Value::Symbol(ref name) => env.get(name).ok_or(RuntimeError::UnkSymbol(name.clone())),
             Value::List(ref opt) => match *opt {
                 Some(ref cons) => {
                     match try!(cons.car.eval(env)) {

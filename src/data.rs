@@ -19,7 +19,7 @@ pub enum Value
 {
     Nil,
     Number(f64),
-    Ident(Rc<String>),
+    Symbol(Rc<String>),
     String(Rc<String>),
     Builtin(Rc<BuiltinFn>),
     List(Option<Rc<Cons>>),
@@ -32,7 +32,7 @@ impl fmt::Display for Value
         match *self {
             Value::Nil => write!(f, "nil"),
             Value::Number(ref val) => write!(f, "{}", val),
-            Value::Ident(ref val) => write!(f, "{}", val),
+            Value::Symbol(ref val) => write!(f, "{}", val),
             Value::String(ref val) => write!(f, "\"{}\"", val),
             Value::Builtin(ref val) => write!(f, "#builtin:{}", val.name),
             Value::List(ref opt) => match *opt {
@@ -138,7 +138,7 @@ impl fmt::Display for ParseError
 #[derive(Debug)]
 pub enum RuntimeError
 {
-    UnkIdent(Rc<String>),
+    UnkSymbol(Rc<String>),
     InvalidCall(&'static str),
     InvalidArgNum(u32),
     InvalidArgType(&'static str, &'static str),
@@ -150,7 +150,7 @@ impl fmt::Display for RuntimeError
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result
     {
         match *self {
-            RuntimeError::UnkIdent(ref s) => write!(f, "Unknown identifier: {}", s),
+            RuntimeError::UnkSymbol(ref s) => write!(f, "Unbound variable: {}", s),
             RuntimeError::InvalidCall(t) => write!(f, "Invalid call on a {} value", t),
             RuntimeError::InvalidArgNum(n) => write!(f, "Incorrect number or arguments (Expected {})", n),
             RuntimeError::InvalidArgType(a, b) => write!(f, "Invalid argument: expected {}, but found {}", a, b),
