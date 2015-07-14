@@ -10,7 +10,7 @@ impl Value
             Value::Number(_) => "Number",
             Value::Ident(_) => "Ident",
             Value::String(_) => "String",
-            Value::Builtin(_, _) => "Builtin",
+            Value::Builtin(_) => "Builtin",
             Value::List(_) => "List",
         }
     }
@@ -27,14 +27,14 @@ impl Value
             Value::List(ref opt) => match *opt {
                 Some(ref cons) => {
                     match try!(cons.car.eval(env)) {
-                        Value::Builtin(func, do_eval) => {
-                            if do_eval
+                        Value::Builtin(func) => {
+                            if func.do_eval
                             {
-                                func.0(&try!(eval_list(&cons.cdr, env)))
+                                (func.call)(&try!(eval_list(&cons.cdr, env)))
                             }
                             else
                             {
-                                func.0(&cons.cdr)
+                                (func.call)(&cons.cdr)
                             }
                         },
                         other => Err(RuntimeError::InvalidCall(other.type_name())),

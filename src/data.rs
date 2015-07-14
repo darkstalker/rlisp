@@ -21,18 +21,31 @@ pub enum Value
     Number(f64),
     Ident(String),
     String(String),
-    Builtin(BuiltinFn, bool),
+    Builtin(Rc<BuiltinFn>),
     List(Option<Rc<Cons>>),
 }
 
-#[derive(Clone)]
-pub struct BuiltinFn(pub Rc<Fn(&Option<Rc<Cons>>) -> Result<Value, RuntimeError>>);
+pub struct BuiltinFn
+{
+    pub name: &'static str,
+    pub do_eval: bool,
+    pub call: Box<Fn(&Option<Rc<Cons>>) -> Result<Value, RuntimeError>>,
+}
+
+impl BuiltinFn
+{
+    pub fn new<F>(n: &'static str, de: bool, f: F) -> Rc<BuiltinFn>
+        where F: Fn(&Option<Rc<Cons>>) -> Result<Value, RuntimeError> + 'static
+    {
+        Rc::new(BuiltinFn{ name: n, do_eval: de, call: Box::new(f) })
+    }
+}
 
 impl fmt::Debug for BuiltinFn
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result
     {
-        write!(f, "<BuiltinFn>")
+        write!(f, "BuiltinFn({})", self.name)
     }
 }
 
@@ -41,11 +54,11 @@ impl fmt::Display for Value
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result
     {
         match *self {
-            Value::Nil => write!(f, "#<Nil>"),
+            Value::Nil => write!(f, "nil"),
             Value::Number(ref val) => write!(f, "{}", val),
             Value::Ident(ref val) => write!(f, "{}", val),
             Value::String(ref val) => write!(f, "\"{}\"", val),
-            Value::Builtin(_, _) => write!(f, "#<BuiltinFn>"),
+            Value::Builtin(ref val) => write!(f, "#builtin:{}", val.name),
             Value::List(ref opt) => match *opt {
                 Some(ref val) => write!(f, "({})", val),
                 None => write!(f, "()"),

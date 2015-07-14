@@ -26,14 +26,15 @@ impl<'a> GlobalScope<'a>
         self.set(key, Value::String(val.to_string()))
     }
 
-    pub fn set_builtin<F>(&mut self, key: &'a str, do_eval: bool, val: F)
+    pub fn set_builtin<F>(&mut self, key: &'static str, do_eval: bool, val: F)
         where F: Fn(&Option<Rc<Cons>>) -> Result<Value, RuntimeError> + 'static
     {
-        self.set(key, Value::Builtin(BuiltinFn(Rc::new(val)), do_eval))
+        self.set(key, Value::Builtin(BuiltinFn::new(key, do_eval, val)))
     }
 
     pub fn load_stdlib(&mut self)
     {
+        self.set("nil", Value::Nil);
         builtins::load(self);
     }
 }
