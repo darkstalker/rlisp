@@ -4,9 +4,9 @@ use scope::GlobalScope;
 pub fn load(env: &mut GlobalScope)
 {
     env.set_builtin("quote", false, |args| {
-    match *args {
-        Some(ref cons) => Ok(cons.car.clone()), //FIXME: should fail with extra args
-        None => Err(RuntimeError::InvalidArgNum(1)),
+        match *args {
+            Some(ref cons) => Ok(cons.car.clone()), //FIXME: should fail with extra args
+            None => Err(RuntimeError::InvalidArgNum(1)),
         }
     });
 

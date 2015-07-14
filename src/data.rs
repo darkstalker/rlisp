@@ -25,6 +25,24 @@ pub enum Value
     List(Option<Rc<Cons>>),
 }
 
+impl fmt::Display for Value
+{
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result
+    {
+        match *self {
+            Value::Nil => write!(f, "nil"),
+            Value::Number(ref val) => write!(f, "{}", val),
+            Value::Ident(ref val) => write!(f, "{}", val),
+            Value::String(ref val) => write!(f, "\"{}\"", val),
+            Value::Builtin(ref val) => write!(f, "#builtin:{}", val.name),
+            Value::List(ref opt) => match *opt {
+                Some(ref val) => write!(f, "({})", val),
+                None => write!(f, "()"),
+            }
+        }
+    }
+}
+
 pub struct BuiltinFn
 {
     pub name: &'static str,
@@ -46,24 +64,6 @@ impl fmt::Debug for BuiltinFn
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result
     {
         write!(f, "BuiltinFn({})", self.name)
-    }
-}
-
-impl fmt::Display for Value
-{
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result
-    {
-        match *self {
-            Value::Nil => write!(f, "nil"),
-            Value::Number(ref val) => write!(f, "{}", val),
-            Value::Ident(ref val) => write!(f, "{}", val),
-            Value::String(ref val) => write!(f, "\"{}\"", val),
-            Value::Builtin(ref val) => write!(f, "#builtin:{}", val.name),
-            Value::List(ref opt) => match *opt {
-                Some(ref val) => write!(f, "({})", val),
-                None => write!(f, "()"),
-            }
-        }
     }
 }
 
