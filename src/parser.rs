@@ -1,3 +1,4 @@
+use std::rc::Rc;
 use std::mem;
 use data::{Token, Value, Cons, ParseError};
 use lexer::Tokenizer;
@@ -34,8 +35,8 @@ impl<'a> Parser<'a>
                 Err(e) => Err(e),
             },
             Token::Number(val) => Ok(Value::Number(val)),
-            Token::Ident(val) => Ok(Value::Ident(val)),
-            Token::String(val) => Ok(Value::String(val)),
+            Token::Ident(val) => Ok(Value::Ident(Rc::new(val))),
+            Token::String(val) => Ok(Value::String(Rc::new(val))),
             Token::Error(e) => Err(e),
             Token::End => Err(ParseError::EndOfStream),
         }

@@ -23,7 +23,7 @@ impl<'a> GlobalScope<'a>
 
     pub fn set_string(&mut self, key: &'a str, val: &str)
     {
-        self.set(key, Value::String(val.to_string()))
+        self.set(key, Value::String(Rc::new(val.to_string())))
     }
 
     pub fn set_builtin<F>(&mut self, key: &'static str, do_eval: bool, val: F)

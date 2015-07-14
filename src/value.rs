@@ -17,7 +17,7 @@ impl Value
 
     pub fn quote(self) -> Value
     {
-        Value::List(Cons::new(Value::Ident("quote".to_string()), Cons::new(self, None)))
+        Value::List(Cons::new(Value::Ident(Rc::new("quote".to_string())), Cons::new(self, None)))
     }
 
     pub fn eval(&self, env: &Scope) -> Result<Value, RuntimeError>

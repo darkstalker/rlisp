@@ -19,8 +19,8 @@ pub enum Value
 {
     Nil,
     Number(f64),
-    Ident(String),
-    String(String),
+    Ident(Rc<String>),
+    String(Rc<String>),
     Builtin(Rc<BuiltinFn>),
     List(Option<Rc<Cons>>),
 }
@@ -138,7 +138,7 @@ impl fmt::Display for ParseError
 #[derive(Debug)]
 pub enum RuntimeError
 {
-    UnkIdent(String),
+    UnkIdent(Rc<String>),
     InvalidCall(&'static str),
     InvalidArgNum(u32),
     InvalidArgType(&'static str, &'static str),
