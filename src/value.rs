@@ -3,6 +3,18 @@ use data::{Value, Cons, Scope, RuntimeError};
 
 impl Value
 {
+    pub fn type_name(&self) -> &'static str
+    {
+        match *self {
+            Value::Nil => "Nil",
+            Value::Number(_) => "Number",
+            Value::Ident(_) => "Ident",
+            Value::String(_) => "String",
+            Value::Builtin(_, _) => "Builtin",
+            Value::List(_) => "List",
+        }
+    }
+
     pub fn quote(self) -> Value
     {
         Value::List(Cons::new(Value::Ident("quote".to_string()), Cons::new(self, None)))
@@ -25,7 +37,7 @@ impl Value
                                 func.0(&cons.cdr)
                             }
                         },
-                        _ => Err(RuntimeError::InvalidCall),
+                        other => Err(RuntimeError::InvalidCall(other.type_name())),
                     }
                 },
                 None => Ok(Value::Nil),

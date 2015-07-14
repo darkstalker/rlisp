@@ -1,5 +1,4 @@
 use std::fmt;
-use std::error::Error;
 use std::rc::Rc;
 
 #[derive(Debug, PartialEq)]
@@ -108,26 +107,18 @@ pub enum ParseError
     EndOfStream,
 }
 
-impl Error for ParseError
-{
-    fn description(&self) -> &str
-    {
-        match *self {
-            ParseError::UnclosedString => "Unclosed string",
-            ParseError::InvalidNumber => "Invalid number literal",
-            ParseError::UnclosedList => "Unclosed list",
-            ParseError::UnexpectedRparen => "Unexpected ')'",
-            ParseError::NoQuoteArg => "Missing quote argument",
-            ParseError::EndOfStream => "End of stream",
-        }
-    }
-}
-
 impl fmt::Display for ParseError
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result
     {
-        write!(f, "{}", self.description())
+        match *self {
+            ParseError::UnclosedString => write!(f, "Unclosed string"),
+            ParseError::InvalidNumber => write!(f, "Invalid number literal"),
+            ParseError::UnclosedList => write!(f, "Unclosed list"),
+            ParseError::UnexpectedRparen => write!(f, "Unexpected ')'"),
+            ParseError::NoQuoteArg => write!(f, "Missing quote argument"),
+            ParseError::EndOfStream => write!(f, "End of stream"),
+        }
     }
 }
 
@@ -135,8 +126,22 @@ impl fmt::Display for ParseError
 pub enum RuntimeError
 {
     UnkIdent(String),
-    InvalidCall,
-    MissingArgs,
-    InvalidArg,
+    InvalidCall(&'static str),
+    InvalidArgNum(u32),
+    InvalidArgType(&'static str, &'static str),
     Unimplemented,
+}
+
+impl fmt::Display for RuntimeError
+{
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result
+    {
+        match *self {
+            RuntimeError::UnkIdent(ref s) => write!(f, "Unknown identifier: {}", s),
+            RuntimeError::InvalidCall(t) => write!(f, "Invalid call on a {} value", t),
+            RuntimeError::InvalidArgNum(n) => write!(f, "Incorrect number or arguments (Expected {})", n),
+            RuntimeError::InvalidArgType(a, b) => write!(f, "Invalid argument: expected {}, but found {}", a, b),
+            RuntimeError::Unimplemented => write!(f, "Unimplemented"),
+        }
+    }
 }

@@ -6,7 +6,7 @@ pub fn load(env: &mut GlobalScope)
     env.set_builtin("quote", false, |args| {
     match *args {
         Some(ref cons) => Ok(cons.car.clone()), //FIXME: should fail with extra args
-        None => Err(RuntimeError::MissingArgs),
+        None => Err(RuntimeError::InvalidArgNum(1)),
         }
     });
 
@@ -16,7 +16,7 @@ pub fn load(env: &mut GlobalScope)
         {
             match cons.car {
                 Value::Number(n) => acc += n,
-                _ => return Err(RuntimeError::InvalidArg),
+                ref other => return Err(RuntimeError::InvalidArgType("Number", other.type_name())),
             };
             args = &cons.cdr;
         }

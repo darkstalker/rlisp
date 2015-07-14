@@ -24,7 +24,7 @@ fn main()
             {
                 match val.eval(&mut env) {
                     Ok(v) => println!("Result: {}", v),
-                    Err(e) => println!("Error: {:?}", e),
+                    Err(e) => println!("Error: {}", e),
                 }
             },
             Err(e) => println!("Error: {}", e),
