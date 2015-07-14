@@ -20,7 +20,7 @@ impl Value
         Value::List(Cons::new(Value::Symbol(Rc::new("quote".to_string())), Cons::new(self, None)))
     }
 
-    pub fn eval(&self, env: &Scope) -> Result<Value, RuntimeError>
+    pub fn eval(&self, env: &mut Scope) -> Result<Value, RuntimeError>
     {
         match *self {
             Value::Symbol(ref name) => env.get(name).ok_or(RuntimeError::UnkSymbol(name.clone())),
@@ -30,11 +30,11 @@ impl Value
                         Value::Builtin(func) => {
                             if func.do_eval
                             {
-                                (func.call)(&try!(eval_list(&cons.cdr, env)))
+                                (func.call)(&try!(eval_list(&cons.cdr, env)), env)
                             }
                             else
                             {
-                                (func.call)(&cons.cdr)
+                                (func.call)(&cons.cdr, env)
                             }
                         },
                         other => Err(RuntimeError::InvalidCall(other.type_name())),
@@ -47,7 +47,7 @@ impl Value
     }
 }
 
-fn eval_list(mut iter: &Option<Rc<Cons>>, env: &Scope) -> Result<Option<Rc<Cons>>, RuntimeError>
+fn eval_list(mut iter: &Option<Rc<Cons>>, env: &mut Scope) -> Result<Option<Rc<Cons>>, RuntimeError>
 {
     let mut res = Vec::new();
     while let Some(ref cons) = *iter

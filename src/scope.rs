@@ -27,7 +27,7 @@ impl<'a> GlobalScope<'a>
     }
 
     pub fn set_builtin<F>(&mut self, key: &'static str, do_eval: bool, val: F)
-        where F: Fn(&Option<Rc<Cons>>) -> Result<Value, RuntimeError> + 'static
+        where F: Fn(&Option<Rc<Cons>>, &mut Scope) -> Result<Value, RuntimeError> + 'static
     {
         self.set(key, Value::Builtin(BuiltinFn::new(key, do_eval, val)))
     }

@@ -3,14 +3,14 @@ use scope::GlobalScope;
 
 pub fn load(env: &mut GlobalScope)
 {
-    env.set_builtin("quote", false, |args| {
+    env.set_builtin("quote", false, |args, _| {
         match *args {
             Some(ref cons) => Ok(cons.car.clone()), //FIXME: should fail with extra args
             None => Err(RuntimeError::InvalidArgNum(1)),
         }
     });
 
-    env.set_builtin("+", true, |mut args| {
+    env.set_builtin("+", true, |mut args, _| {
         let mut acc = 0.0;
         while let Some(ref cons) = *args
         {

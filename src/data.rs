@@ -47,13 +47,13 @@ pub struct BuiltinFn
 {
     pub name: &'static str,
     pub do_eval: bool,
-    pub call: Box<Fn(&Option<Rc<Cons>>) -> Result<Value, RuntimeError>>,
+    pub call: Box<Fn(&Option<Rc<Cons>>, &mut Scope) -> Result<Value, RuntimeError>>,
 }
 
 impl BuiltinFn
 {
     pub fn new<F>(n: &'static str, de: bool, f: F) -> Rc<BuiltinFn>
-        where F: Fn(&Option<Rc<Cons>>) -> Result<Value, RuntimeError> + 'static
+        where F: Fn(&Option<Rc<Cons>>, &mut Scope) -> Result<Value, RuntimeError> + 'static
     {
         Rc::new(BuiltinFn{ name: n, do_eval: de, call: Box::new(f) })
     }
