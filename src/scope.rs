@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use std::rc::Rc;
-use data::{Value, Cons, Scope, BuiltinFn, RuntimeError};
+use data::{Value, List, Scope, BuiltinFn, RuntimeError};
 use builtins;
 
 #[derive(Debug)]
@@ -27,7 +27,7 @@ impl GlobalScope
     }
 
     pub fn set_builtin<F>(&mut self, key: &'static str, do_eval: bool, val: F)
-        where F: Fn(&Option<Rc<Cons>>, &mut Scope) -> Result<Value, RuntimeError> + 'static
+        where F: Fn(&List, &mut Scope) -> Result<Value, RuntimeError> + 'static
     {
         self.set(key, Value::Builtin(BuiltinFn::new(key, do_eval, val)))
     }

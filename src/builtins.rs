@@ -1,34 +1,34 @@
-use data::{Value, RuntimeError};
+use data::{Value, List, RuntimeError};
 use scope::GlobalScope;
 
 pub fn load(env: &mut GlobalScope)
 {
     env.set_builtin("quote", false, |args, _| {
         match *args {
-            Some(ref cons) => Ok(cons.car.clone()), //FIXME: should fail with extra args
-            None => Err(RuntimeError::InvalidArgNum(1)),
+            List::Node(ref cons) => Ok(cons.car.clone()), //FIXME: should fail with extra args
+            List::End => Err(RuntimeError::InvalidArgNum(1)),
         }
     });
 
     env.set_builtin("set", true, |args, env| {
         match *args {
-            Some(ref c1) => match c1.cdr {
-                Some (ref c2) => match c1.car {
+            List::Node(ref c1) => match c1.cdr {
+                List::Node(ref c2) => match c1.car {
                     Value::Symbol(ref name) => {
                         env.set(name, c2.car.clone());
                         Ok(c2.car.clone())
                     }
                     ref other => Err(RuntimeError::InvalidArgType("Symbol", other.type_name())),
                 },
-                None => Err(RuntimeError::InvalidArgNum(2)),
+                List::End => Err(RuntimeError::InvalidArgNum(2)),
             },
-            None => Err(RuntimeError::InvalidArgNum(2)),
+            List::End => Err(RuntimeError::InvalidArgNum(2)),
         }
     });
 
     env.set_builtin("+", true, |mut args, _| {
         let mut acc = 0.0;
-        while let Some(ref cons) = *args
+        while let List::Node(ref cons) = *args
         {
             match cons.car {
                 Value::Number(n) => acc += n,

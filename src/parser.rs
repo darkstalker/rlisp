@@ -1,6 +1,6 @@
 use std::rc::Rc;
 use std::mem;
-use data::{Token, Value, Cons, ParseError};
+use data::{Token, Value, List, ParseError};
 use lexer::Tokenizer;
 
 pub struct Parser<'a>
@@ -55,7 +55,7 @@ impl<'a> Parser<'a>
             list.push(try!(self.parse_value()));
         }
         self.next_token();  // consume the ')'
-        Ok(Value::List(Cons::from_vec(list)))
+        Ok(Value::List(List::from_vec(list)))
     }
 
     // parses the entire chunk

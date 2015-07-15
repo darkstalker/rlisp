@@ -1,5 +1,5 @@
 use std::rc::Rc;
-use data::{Value, Cons, Scope, RuntimeError};
+use data::{Value, List, Scope, RuntimeError};
 
 impl Value
 {
@@ -17,7 +17,7 @@ impl Value
 
     pub fn quote(self) -> Value
     {
-        Value::List(Cons::new(Value::Symbol(Rc::new("quote".to_string())), Cons::new(self, None)))
+        Value::List(List::cons(Value::Symbol(Rc::new("quote".to_string())), List::cons(self, List::End)))
     }
 
     pub fn eval(&self, env: &mut Scope) -> Result<Value, RuntimeError>
@@ -25,7 +25,7 @@ impl Value
         match *self {
             Value::Symbol(ref name) => env.get(name).ok_or(RuntimeError::UnkSymbol(name.clone())),
             Value::List(ref opt) => match *opt {
-                Some(ref cons) => {
+                List::Node(ref cons) => {
                     match try!(cons.car.eval(env)) {
                         Value::Builtin(func) => {
                             if func.do_eval
@@ -40,20 +40,20 @@ impl Value
                         other => Err(RuntimeError::InvalidCall(other.type_name())),
                     }
                 },
-                None => Ok(Value::Nil),
+                List::End => Ok(Value::Nil),
             },
             _ => Ok(self.clone()),
         }
     }
 }
 
-fn eval_list(mut iter: &Option<Rc<Cons>>, env: &mut Scope) -> Result<Option<Rc<Cons>>, RuntimeError>
+fn eval_list(mut iter: &List, env: &mut Scope) -> Result<List, RuntimeError>
 {
     let mut res = Vec::new();
-    while let Some(ref cons) = *iter
+    while let List::Node(ref cons) = *iter
     {
         res.push(try!(cons.car.eval(env)));
         iter = &cons.cdr;
     }
-    Ok(if res.is_empty() { None } else { Cons::from_vec(res) })
+    Ok(if res.is_empty() { List::End } else { List::from_vec(res) })
 }

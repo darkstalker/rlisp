@@ -22,7 +22,7 @@ pub enum Value
     Symbol(Rc<String>),
     String(Rc<String>),
     Builtin(Rc<BuiltinFn>),
-    List(Option<Rc<Cons>>),
+    List(List),
 }
 
 impl fmt::Display for Value
@@ -35,9 +35,9 @@ impl fmt::Display for Value
             Value::Symbol(ref val) => write!(f, "{}", val),
             Value::String(ref val) => write!(f, "\"{}\"", val),
             Value::Builtin(ref val) => write!(f, "#builtin:{}", val.name),
-            Value::List(ref opt) => match *opt {
-                Some(ref val) => write!(f, "({})", val),
-                None => write!(f, "()"),
+            Value::List(ref lst) => match *lst {
+                List::Node(ref val) => write!(f, "({})", val),
+                List::End => write!(f, "()"),
             }
         }
     }
@@ -47,13 +47,13 @@ pub struct BuiltinFn
 {
     pub name: &'static str,
     pub do_eval: bool,
-    pub call: Box<Fn(&Option<Rc<Cons>>, &mut Scope) -> Result<Value, RuntimeError>>,
+    pub call: Box<Fn(&List, &mut Scope) -> Result<Value, RuntimeError>>,
 }
 
 impl BuiltinFn
 {
     pub fn new<F>(n: &'static str, de: bool, f: F) -> Rc<BuiltinFn>
-        where F: Fn(&Option<Rc<Cons>>, &mut Scope) -> Result<Value, RuntimeError> + 'static
+        where F: Fn(&List, &mut Scope) -> Result<Value, RuntimeError> + 'static
     {
         Rc::new(BuiltinFn{ name: n, do_eval: de, call: Box::new(f) })
     }
@@ -68,25 +68,32 @@ impl fmt::Debug for BuiltinFn
 }
 
 #[derive(Debug, Clone)]
+pub enum List
+{
+    Node(Rc<Cons>),
+    End,
+}
+
+#[derive(Debug, Clone)]
 pub struct Cons
 {
     pub car: Value,
-    pub cdr: Option<Rc<Cons>>,
+    pub cdr: List,
 }
 
-impl Cons
+impl List
 {
-    pub fn new(car: Value, cdr: Option<Rc<Cons>>) -> Option<Rc<Cons>>
+    pub fn cons(car: Value, cdr: List) -> List
     {
-        Some(Rc::new(Cons{ car: car, cdr: cdr }))
+        List::Node(Rc::new(Cons{ car: car, cdr: cdr }))
     }
 
-    pub fn from_vec(mut vec: Vec<Value>) -> Option<Rc<Cons>>
+    pub fn from_vec(mut vec: Vec<Value>) -> List
     {
-        let mut cdr = None;
+        let mut cdr = List::End;
         while let Some(car) = vec.pop()
         {
-            cdr = Cons::new(car, cdr);
+            cdr = List::cons(car, cdr);
         }
         cdr
     }
@@ -97,8 +104,8 @@ impl fmt::Display for Cons
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result
     {
         match *self {
-            Cons{ ref car, cdr: None } => write!(f, "{}", car),
-            Cons{ ref car, cdr: Some(ref next) } => write!(f, "{} {}", car, next),
+            Cons{ ref car, cdr: List::Node(ref next) } => write!(f, "{} {}", car, next),
+            Cons{ ref car, cdr: List::End } => write!(f, "{}", car),
         }
     }
 }
