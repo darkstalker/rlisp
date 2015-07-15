@@ -1,40 +1,35 @@
-use data::{Value, List, RuntimeError};
+use data::Value;
+use data::RuntimeError::*;
 use scope::GlobalScope;
 
 pub fn load(env: &mut GlobalScope)
 {
     env.set_builtin("quote", false, |args, _| {
-        match *args {
-            List::Node(ref cons) => Ok(cons.car.clone()), //FIXME: should fail with extra args
-            List::End => Err(RuntimeError::InvalidArgNum(1)),
-        }
+        args.iter().next().ok_or(InvalidArgNum(1))
     });
 
     env.set_builtin("set", true, |args, env| {
-        match *args {
-            List::Node(ref c1) => match c1.cdr {
-                List::Node(ref c2) => match c1.car {
-                    Value::Symbol(ref name) => {
-                        env.set(name, c2.car.clone());
-                        Ok(c2.car.clone())
-                    }
-                    ref other => Err(RuntimeError::InvalidArgType("Symbol", other.type_name())),
-                },
-                List::End => Err(RuntimeError::InvalidArgNum(2)),
+        let mut iter = args.iter();
+        let key = try!(iter.next().ok_or(InvalidArgNum(2)));
+        let val = try!(iter.next().ok_or(InvalidArgNum(2)));
+        match key {
+            Value::Symbol(name) => {
+                env.set(&name, val.clone());
+                Ok(val)
             },
-            List::End => Err(RuntimeError::InvalidArgNum(2)),
+            other => Err(InvalidArgType("Symbol", other.type_name())),
         }
     });
 
-    env.set_builtin("+", true, |mut args, _| {
+    env.set_builtin("+", true, |args, _| {
         let mut acc = 0.0;
-        while let List::Node(ref cons) = *args
+        let mut iter = args.iter();
+        while let Some(val) = iter.next()
         {
-            match cons.car {
-                Value::Number(n) => acc += n,
-                ref other => return Err(RuntimeError::InvalidArgType("Number", other.type_name())),
+            acc += match val {
+                Value::Number(n) => n,
+                other => return Err(InvalidArgType("Number", other.type_name())),
             };
-            args = &cons.cdr;
         }
         Ok(Value::Number(acc))
     });

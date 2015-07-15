@@ -47,13 +47,13 @@ impl Value
     }
 }
 
-fn eval_list(mut iter: &List, env: &mut Scope) -> Result<List, RuntimeError>
+fn eval_list(list: &List, env: &mut Scope) -> Result<List, RuntimeError>
 {
     let mut res = Vec::new();
-    while let List::Node(ref cons) = *iter
+    let mut iter = list.iter();
+    while let Some(val) = iter.next()
     {
-        res.push(try!(cons.car.eval(env)));
-        iter = &cons.cdr;
+        res.push(try!(val.eval(env)));
     }
     Ok(if res.is_empty() { List::End } else { List::from_vec(res) })
 }

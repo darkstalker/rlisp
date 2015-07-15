@@ -1,5 +1,6 @@
 use std::fmt;
 use std::rc::Rc;
+use std::iter::Iterator;
 
 #[derive(Debug, PartialEq)]
 pub enum Token
@@ -97,6 +98,11 @@ impl List
         }
         cdr
     }
+
+    pub fn iter(&self) -> ListIter
+    {
+        ListIter(self)
+    }
 }
 
 impl fmt::Display for Cons
@@ -106,6 +112,25 @@ impl fmt::Display for Cons
         match *self {
             Cons{ ref car, cdr: List::Node(ref next) } => write!(f, "{} {}", car, next),
             Cons{ ref car, cdr: List::End } => write!(f, "{}", car),
+        }
+    }
+}
+
+#[derive(Clone)]
+pub struct ListIter<'a>(&'a List);
+
+impl<'a> Iterator for ListIter<'a>
+{
+    type Item = Value;
+
+    fn next(&mut self) -> Option<Self::Item>
+    {
+        match *self.0 {
+            List::Node(ref cons) => {
+                self.0 = &cons.cdr;
+                Some(cons.car.clone())
+            },
+            List::End => None,
         }
     }
 }
