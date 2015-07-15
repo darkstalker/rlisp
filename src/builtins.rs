@@ -8,14 +8,15 @@ pub fn load(env: &mut GlobalScope)
         args.iter().next().ok_or(InvalidArgNum(1))
     });
 
-    env.set_builtin("set", true, |args, env| {
+    env.set_builtin("set", false, |args, env| {
         let mut iter = args.iter();
         let key = try!(iter.next().ok_or(InvalidArgNum(2)));
         let val = try!(iter.next().ok_or(InvalidArgNum(2)));
         match key {
             Value::Symbol(name) => {
-                env.set(&name, val.clone());
-                Ok(val)
+                let ev = try!(val.eval(env));
+                env.set(&name, ev.clone());
+                Ok(ev)
             },
             other => Err(InvalidArgType("Symbol", other.type_name())),
         }
