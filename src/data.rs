@@ -35,10 +35,7 @@ impl fmt::Display for Value
             Value::Symbol(ref val) => write!(f, "{}", val),
             Value::String(ref val) => write!(f, "\"{}\"", val),
             Value::Builtin(ref val) => write!(f, "#builtin:{}", val.name),
-            Value::List(ref lst) => match *lst {
-                List::Node(ref val) => write!(f, "({})", val),
-                List::End => write!(f, "()"),
-            }
+            Value::List(ref val) => write!(f, "{}", val),
         }
     }
 }
@@ -72,6 +69,17 @@ pub enum List
 {
     Node(Rc<Cons>),
     End,
+}
+
+impl fmt::Display for List
+{
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result
+    {
+        match *self {
+            List::Node(ref val) => write!(f, "({})", val),
+            List::End => write!(f, "()"),
+        }
+    }
 }
 
 #[derive(Debug, Clone)]
