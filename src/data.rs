@@ -47,15 +47,6 @@ pub struct BuiltinFn
     pub call: Box<Fn(&List, &mut Scope) -> Result<Value, RuntimeError>>,
 }
 
-impl BuiltinFn
-{
-    pub fn new<F>(n: &'static str, de: bool, f: F) -> Rc<BuiltinFn>
-        where F: Fn(&List, &mut Scope) -> Result<Value, RuntimeError> + 'static
-    {
-        Rc::new(BuiltinFn{ name: n, do_eval: de, call: Box::new(f) })
-    }
-}
-
 impl fmt::Debug for BuiltinFn
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result
