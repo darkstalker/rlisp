@@ -21,9 +21,9 @@ impl GlobalScope
         self.set(key, Value::Number(val))
     }
 
-    pub fn set_string(&mut self, key: &str, val: &str)
+    pub fn set_string(&mut self, key: &str, val: String)
     {
-        self.set(key, Value::String(Rc::new(val.to_string())))
+        self.set(key, Value::String(Rc::new(val)))
     }
 
     pub fn set_builtin<F>(&mut self, key: &'static str, do_eval: bool, val: F)
