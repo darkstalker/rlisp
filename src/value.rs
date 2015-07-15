@@ -30,7 +30,7 @@ impl Value
                         Value::Builtin(func) => {
                             if func.do_eval
                             {
-                                (func.call)(&try!(eval_list(&cons.cdr, env)), env)
+                                (func.call)(&try!(cons.cdr.eval(env)), env)
                             }
                             else
                             {
@@ -45,15 +45,4 @@ impl Value
             _ => Ok(self.clone()),
         }
     }
-}
-
-fn eval_list(list: &List, env: &mut Scope) -> Result<List, RuntimeError>
-{
-    let mut res = Vec::new();
-    let mut iter = list.iter();
-    while let Some(val) = iter.next()
-    {
-        res.push(try!(val.eval(env)));
-    }
-    Ok(if res.is_empty() { List::End } else { List::from_vec(res) })
 }
