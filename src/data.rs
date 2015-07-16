@@ -44,7 +44,22 @@ pub struct BuiltinFn
 {
     pub name: &'static str,
     pub do_eval: bool,
-    pub call: Box<Fn(&List, &mut Scope) -> Result<Value, RuntimeError>>,
+    pub func: Box<Fn(&List, &mut Scope) -> Result<Value, RuntimeError>>,
+}
+
+impl BuiltinFn
+{
+    pub fn call(&self, args: &List, env: &mut Scope) -> Result<Value, RuntimeError>
+    {
+        if self.do_eval
+        {
+            (self.func)(&try!(args.eval(env)), env)
+        }
+        else
+        {
+            (self.func)(args, env)
+        }
+    }
 }
 
 impl fmt::Debug for BuiltinFn

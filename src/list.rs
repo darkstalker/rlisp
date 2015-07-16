@@ -34,6 +34,17 @@ impl List
         }
         Ok(List::from_vec(res))
     }
+
+    pub fn call(&self, env: &mut Scope) -> Result<Value, RuntimeError>
+    {
+        match *self {
+            List::Node(ref cons) => match try!(cons.car.eval(env)) {
+                Value::Builtin(ref func) => func.call(&cons.cdr, env),
+                other => Err(RuntimeError::InvalidCall(other.type_name())),
+            },
+            List::End => Ok(Value::Nil),
+        }
+    }
 }
 
 #[derive(Clone)]
