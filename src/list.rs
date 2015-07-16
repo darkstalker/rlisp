@@ -26,13 +26,7 @@ impl List
 
     pub fn eval(&self, env: &mut Scope) -> Result<List, RuntimeError>
     {
-        let mut res = Vec::new();
-        let mut iter = self.iter();
-        while let Some(val) = iter.next()
-        {
-            res.push(try!(val.eval(env)));
-        }
-        Ok(List::from_vec(res))
+        Ok(List::from_vec(try!(self.iter().map(|val| val.eval(env)).collect())))
     }
 
     pub fn call(&self, env: &mut Scope) -> Result<Value, RuntimeError>
