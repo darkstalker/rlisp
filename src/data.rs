@@ -143,7 +143,7 @@ pub enum RuntimeError
 {
     UnkSymbol(Rc<String>),
     InvalidCall(&'static str),
-    InvalidArgNum(u32),
+    InvalidArgNum(u32, u32),
     InvalidArgType(&'static str, &'static str),
     Unimplemented,
 }
@@ -155,7 +155,7 @@ impl fmt::Display for RuntimeError
         match *self {
             RuntimeError::UnkSymbol(ref s) => write!(f, "Unbound variable: {}", s),
             RuntimeError::InvalidCall(t) => write!(f, "Invalid call on a {} value", t),
-            RuntimeError::InvalidArgNum(n) => write!(f, "Incorrect number or arguments (Expected {})", n),
+            RuntimeError::InvalidArgNum(n, a) => write!(f, "Expected {} arguments, but got {}", n, a),
             RuntimeError::InvalidArgType(a, b) => write!(f, "Invalid argument: expected {}, but found {}", a, b),
             RuntimeError::Unimplemented => write!(f, "Unimplemented"),
         }
