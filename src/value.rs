@@ -10,7 +10,7 @@ impl Value
             Value::Number(_) => "Number",
             Value::Symbol(_) => "Symbol",
             Value::String(_) => "String",
-            Value::Builtin(_) => "Builtin",
+            Value::Function(_) => "Function",
             Value::List(_) => "List",
         }
     }
@@ -37,7 +37,7 @@ impl Value
     pub fn call(&self, args: &List, env: &mut Scope) -> Result<Value, RuntimeError>
     {
         match *self {
-            Value::Builtin(ref func) => func.call(args, env),
+            Value::Function(ref func) => func.call(args, env),
             ref other => Err(RuntimeError::InvalidCall(other.type_name())),
         }
     }

@@ -1,6 +1,33 @@
-use data::{Value, List};
+use data::{Value, List, Scope, Function, RuntimeError};
 use data::RuntimeError::*;
 use scope::GlobalScope;
+
+pub struct BuiltinFn
+{
+    pub name: &'static str,
+    pub do_eval: bool,
+    pub func: Box<Fn(&List, &mut Scope) -> Result<Value, RuntimeError>>,
+}
+
+impl Function for BuiltinFn
+{
+    fn call(&self, args: &List, env: &mut Scope) -> Result<Value, RuntimeError>
+    {
+        if self.do_eval
+        {
+            (self.func)(&try!(args.eval(env)), env)
+        }
+        else
+        {
+            (self.func)(args, env)
+        }
+    }
+
+    fn get_name(&self) -> &str
+    {
+        self.name
+    }
+}
 
 macro_rules! try_cast
 {
@@ -10,7 +37,7 @@ macro_rules! try_cast
     })
 }
 
-pub fn load(env: &mut GlobalScope)
+pub fn load_builtins(env: &mut GlobalScope)
 {
     env.set_builtin("quote", false, |args, _| {
         args.iter().next().ok_or(InvalidArgNum(1, 0))
@@ -38,7 +65,7 @@ pub fn load(env: &mut GlobalScope)
         let mut iter = args.iter();
         let first = try!(iter.next().ok_or(InvalidArgNum(2, 0)));
         let lst = try!(iter.next().ok_or(InvalidArgNum(2, 1)));
-        let func = try_cast!(first, Builtin); //FIXME: make a Function trait
+        let func = try_cast!(first, Function);
         try_cast!(lst, List).iter().map(|val| func.call(&val.wrap(), env)).collect::<Result<_, _>>()
             .map(|vec| Value::List(List::from_vec(vec)))
     });
@@ -48,7 +75,7 @@ pub fn load(env: &mut GlobalScope)
         let first = try!(iter.next().ok_or(InvalidArgNum(3, 0)));
         let init = try!(iter.next().ok_or(InvalidArgNum(3, 1)));
         let lst = try!(iter.next().ok_or(InvalidArgNum(3, 2)));
-        let func = try_cast!(first, Builtin); // ^ same
+        let func = try_cast!(first, Function);
         try_cast!(lst, List).fold(init, |acc, val| func.call(&List::cons(acc, val.wrap()), env))
     });
 

@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::rc::Rc;
-use data::{Value, List, Scope, BuiltinFn, RuntimeError};
-use builtins;
+use data::{Value, List, Scope, RuntimeError};
+use builtins::{BuiltinFn, load_builtins};
 
 #[derive(Debug)]
 pub struct GlobalScope
@@ -29,13 +29,13 @@ impl GlobalScope
     pub fn set_builtin<F>(&mut self, key: &'static str, do_eval: bool, val: F)
         where F: Fn(&List, &mut Scope) -> Result<Value, RuntimeError> + 'static
     {
-        self.set(key, Value::Builtin(Rc::new(BuiltinFn{ name: key, do_eval: do_eval, func: Box::new(val) })))
+        self.set(key, Value::Function(Rc::new(BuiltinFn{ name: key, do_eval: do_eval, func: Box::new(val) })))
     }
 
     pub fn load_stdlib(&mut self)
     {
         self.set("nil", Value::Nil);
-        builtins::load(self);
+        load_builtins(self);
     }
 }
 

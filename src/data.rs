@@ -21,7 +21,7 @@ pub enum Value
     Number(f64),
     Symbol(Rc<String>),
     String(Rc<String>),
-    Builtin(Rc<BuiltinFn>),
+    Function(Rc<Function>),
     List(List),
 }
 
@@ -34,39 +34,23 @@ impl fmt::Display for Value
             Value::Number(ref val) => write!(f, "{}", val),
             Value::Symbol(ref val) => write!(f, "{}", val),
             Value::String(ref val) => write!(f, "\"{}\"", val),
-            Value::Builtin(ref val) => write!(f, "#builtin:{}", val.name),
+            Value::Function(ref val) => write!(f, "#function:{}", val.get_name()),
             Value::List(ref val) => write!(f, "{}", val),
         }
     }
 }
 
-pub struct BuiltinFn
+pub trait Function
 {
-    pub name: &'static str,
-    pub do_eval: bool,
-    pub func: Box<Fn(&List, &mut Scope) -> Result<Value, RuntimeError>>,
+    fn call(&self, args: &List, env: &mut Scope) -> Result<Value, RuntimeError>;
+    fn get_name(&self) -> &str;
 }
 
-impl BuiltinFn
-{
-    pub fn call(&self, args: &List, env: &mut Scope) -> Result<Value, RuntimeError>
-    {
-        if self.do_eval
-        {
-            (self.func)(&try!(args.eval(env)), env)
-        }
-        else
-        {
-            (self.func)(args, env)
-        }
-    }
-}
-
-impl fmt::Debug for BuiltinFn
+impl fmt::Debug for Function
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result
     {
-        write!(f, "BuiltinFn({})", self.name)
+        write!(f, "Function({})", self.get_name())
     }
 }
 
