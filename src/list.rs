@@ -39,6 +39,17 @@ impl List
             List::End => Ok(Value::Nil),
         }
     }
+
+    pub fn fold<T, F>(&self, mut acc: T, mut f: F) -> Result<T, RuntimeError>
+        where F: FnMut(T, Value) -> Result<T, RuntimeError>
+    {
+        let mut iter = self.iter();
+        while let Some(val) = iter.next()
+        {
+            acc = try!(f(acc, val))
+        }
+        Ok(acc)
+    }
 }
 
 #[derive(Clone)]
