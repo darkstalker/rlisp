@@ -1,5 +1,5 @@
 use std::rc::Rc;
-use std::iter::Iterator;
+use std::iter::{Iterator, FromIterator, IntoIterator};
 use data::{Value, List, Cons, Scope, RuntimeError};
 
 impl List
@@ -26,7 +26,7 @@ impl List
 
     pub fn eval(&self, env: &mut Scope) -> Result<List, RuntimeError>
     {
-        self.iter().map(|val| val.eval(env)).collect::<Result<_, _>>().map(|v| List::from_vec(v))
+        self.iter().map(|val| val.eval(env)).collect()
     }
 
     pub fn call(&self, env: &mut Scope) -> Result<Value, RuntimeError>
@@ -49,6 +49,15 @@ impl List
             acc = try!(f(acc, val))
         }
         Ok(acc)
+    }
+}
+
+impl FromIterator<Value> for List
+{
+    fn from_iter<T>(iterator: T) -> Self
+        where T: IntoIterator<Item=Value>
+    {
+        List::from_vec(iterator.into_iter().collect())
     }
 }
 

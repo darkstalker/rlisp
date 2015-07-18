@@ -78,7 +78,7 @@ pub fn load_builtins(env: &mut GlobalScope)
         let func = check_arg!(iter, Function, 2, 0);
         let lst = check_arg!(iter, List, 2, 1);
         lst.iter().map(|val| func.call(&val.wrap(), env)).collect::<Result<_, _>>()
-            .map(|vec| Value::List(List::from_vec(vec)))
+            .map(|lst| Value::List(lst))
     });
 
     env.set_builtin("fold", true, |args, env| {
