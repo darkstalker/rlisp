@@ -26,7 +26,7 @@ impl List
 
     pub fn eval(&self, env: &mut Scope) -> Result<List, RuntimeError>
     {
-        Ok(List::from_vec(try!(self.iter().map(|val| val.eval(env)).collect())))
+        self.iter().map(|val| val.eval(env)).collect::<Result<_, _>>().map(|v| List::from_vec(v))
     }
 
     pub fn call(&self, env: &mut Scope) -> Result<Value, RuntimeError>
