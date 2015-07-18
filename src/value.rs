@@ -33,12 +33,4 @@ impl Value
             _ => Ok(self.clone()),
         }
     }
-
-    pub fn call(&self, args: &List, env: &mut Scope) -> Result<Value, RuntimeError>
-    {
-        match *self {
-            Value::Function(ref func) => func.call(args, env),
-            ref other => Err(RuntimeError::InvalidCall(other.type_name())),
-        }
-    }
 }
