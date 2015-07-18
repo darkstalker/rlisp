@@ -9,14 +9,9 @@ impl List
         List::Node(Rc::new(Cons{ car: car, cdr: cdr }))
     }
 
-    pub fn from_vec(mut vec: Vec<Value>) -> List
+    pub fn from_vec(vec: Vec<Value>) -> List
     {
-        let mut cdr = List::End;
-        while let Some(car) = vec.pop()
-        {
-            cdr = List::cons(car, cdr);
-        }
-        cdr
+        vec.into_iter().rev().fold(List::End, |cdr, car| List::cons(car, cdr))
     }
 
     pub fn iter(&self) -> ListIter
