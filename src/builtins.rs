@@ -89,6 +89,35 @@ pub fn load_builtins(env: &mut GlobalScope)
         lst.fold(init, |acc, val| func.call(&List::cons(acc, val.wrap()), env))
     });
 
+    env.set_builtin("car", true, |args, _| {
+        let mut iter = args.iter();
+        let lst = check_arg!(iter, List, 1, 0);
+        Ok(match lst {
+            List::Node(cons) => cons.car.clone(),
+            _ => Value::Nil,
+        })
+    });
+
+    env.set_builtin("cdr", true, |args, _| {
+        let mut iter = args.iter();
+        let lst = check_arg!(iter, List, 1, 0);
+        Ok(match lst {
+            List::Node(cons) => Value::List(cons.cdr.clone()),
+            _ => Value::Nil,
+        })
+    });
+
+    env.set_builtin("cons", true, |args, _| {
+        let mut iter = args.iter();
+        let car = check_arg!(iter, 2, 0);
+        let cdr = check_arg!(iter, List, 2, 1);
+        Ok(Value::List(List::cons(car, cdr)))
+    });
+
+    env.set_builtin("list", true, |args, _| {
+        Ok(Value::List(args.clone()))
+    });
+
     env.set_builtin("+", true, |args, _| {
         args.fold(0.0, |acc, val| map_value!(val, Number, |n| acc + n)).map(|n| Value::Number(n))
     });
