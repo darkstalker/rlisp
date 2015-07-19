@@ -11,9 +11,9 @@ pub struct BuiltinFn
 
 impl Function for BuiltinFn
 {
-    fn call(&self, args: &List, env: &mut Scope) -> Result<Value, RuntimeError>
+    fn call(&self, args: &List, env: &mut Scope, do_ev: bool) -> Result<Value, RuntimeError>
     {
-        if self.do_eval
+        if do_ev && self.do_eval
         {
             (self.func)(&try!(args.eval(env)), env)
         }
@@ -77,7 +77,7 @@ pub fn load_builtins(env: &mut GlobalScope)
         let mut iter = args.iter();
         let func = check_arg!(iter, Function, 2, 0);
         let lst = check_arg!(iter, List, 2, 1);
-        lst.iter().map(|val| func.call(&val.wrap(), env)).collect::<Result<_, _>>()
+        lst.iter().map(|val| func.call(&val.wrap(), env, false)).collect::<Result<_, _>>()
             .map(|lst| Value::List(lst))
     });
 
@@ -86,7 +86,7 @@ pub fn load_builtins(env: &mut GlobalScope)
         let func = check_arg!(iter, Function, 3, 0);
         let init = check_arg!(iter, 3, 1);
         let lst = check_arg!(iter, List, 3, 2);
-        lst.fold(init, |acc, val| func.call(&List::cons(acc, val.wrap()), env))
+        lst.fold(init, |acc, val| func.call(&List::cons(acc, val.wrap()), env, false))
     });
 
     env.set_builtin("car", true, |args, _| {

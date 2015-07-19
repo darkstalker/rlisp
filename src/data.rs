@@ -42,7 +42,7 @@ impl fmt::Display for Value
 
 pub trait Function
 {
-    fn call(&self, args: &List, env: &mut Scope) -> Result<Value, RuntimeError>;
+    fn call(&self, args: &List, env: &mut Scope, do_ev: bool) -> Result<Value, RuntimeError>;
     fn get_name(&self) -> &str;
 }
 

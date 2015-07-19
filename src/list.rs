@@ -28,7 +28,7 @@ impl List
     {
         match *self {
             List::Node(ref cons) => match try!(cons.car.eval(env)) {
-                Value::Function(ref func) => func.call(&cons.cdr, env),
+                Value::Function(ref func) => func.call(&cons.cdr, env, true),
                 other => Err(RuntimeError::InvalidCall(other.type_name())),
             },
             List::End => Ok(Value::Nil),
