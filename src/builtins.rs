@@ -118,6 +118,51 @@ pub fn load_builtins(env: &mut GlobalScope)
         Ok(Value::List(args.clone()))
     });
 
+    env.set_builtin("not", true, |args, _| {
+        let mut iter = args.iter();
+        let val = check_arg!(iter, 1, 0);
+        Ok(Value::Bool(match val {
+            Value::Nil | Value::Bool(false) => true,
+            _ => false,
+        }))
+    });
+
+    env.set_builtin("and", false, |args, env| {
+        let mut iter = args.iter();
+        let mut last = Value::Bool(true);
+        while let Some(val) = iter.next()
+        {
+            match try!(val.eval(env)) {
+                v @ Value::Nil | v @ Value::Bool(false) => return Ok(v),
+                other => last = other,
+            }
+        }
+        Ok(last)
+    });
+
+    env.set_builtin("or", false, |args, env| {
+        let mut iter = args.iter();
+        let mut last = Value::Bool(false);
+        while let Some(val) = iter.next()
+        {
+            match try!(val.eval(env)) {
+                v @ Value::Nil | v @ Value::Bool(false) => last = v,
+                other => return Ok(other),
+            }
+        }
+        Ok(last)
+    });
+
+    env.set_builtin("if", false, |args, env| {
+        let mut iter = args.iter();
+        let cond = check_arg!(iter, 2, 0);
+        let then = check_arg!(iter, 2, 1);
+        match try!(cond.eval(env)) {
+            Value::Nil | Value::Bool(false) => iter.next().unwrap_or(Value::Nil).eval(env),
+            _ => then.eval(env),
+        }
+    });
+
     env.set_builtin("+", true, |args, _| {
         args.fold(0.0, |acc, val| map_value!(val, Number, |n| acc + n)).map(|n| Value::Number(n))
     });

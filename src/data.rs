@@ -18,6 +18,7 @@ pub enum Token
 pub enum Value
 {
     Nil,
+    Bool(bool),
     Number(f64),
     Symbol(Rc<String>),
     String(Rc<String>),
@@ -31,6 +32,7 @@ impl fmt::Display for Value
     {
         match *self {
             Value::Nil => write!(f, "nil"),
+            Value::Bool(val) => write!(f, "{}", val),
             Value::Number(ref val) => write!(f, "{}", val),
             Value::Symbol(ref val) => write!(f, "{}", val),
             Value::String(ref val) => write!(f, "\"{}\"", val),

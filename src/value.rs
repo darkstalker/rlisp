@@ -7,6 +7,7 @@ impl Value
     {
         match *self {
             Value::Nil => "Nil",
+            Value::Bool(_) => "Bool",
             Value::Number(_) => "Number",
             Value::Symbol(_) => "Symbol",
             Value::String(_) => "String",
