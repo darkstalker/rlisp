@@ -176,6 +176,12 @@ pub fn load_builtins(env: &mut GlobalScope)
         args.iter().map(|val| val.eval(&mut local)).last().unwrap_or(Ok(Value::Nil))
     });
 
+    env.set_builtin("eval", true, |args, env| {
+        let mut iter = args.iter();
+        let expr = check_arg!(iter, 1, 0);
+        expr.eval(env)
+    });
+
     env.set_builtin("+", true, |args, _| {
         args.fold(0.0, |acc, val| map_value!(val, Number, |n| acc + n)).map(|n| Value::Number(n))
     });
