@@ -46,7 +46,7 @@ macro_rules! map_value
 {
     ($v:expr, $ty:ident, $f:expr) => (match $v {
         Value::$ty(val) => Ok($f(val)),
-        _ => return Err(InvalidArgType(stringify!($ty), $v.type_name())),
+        _ => Err(InvalidArgType(stringify!($ty), $v.type_name())),
     })
 }
 
