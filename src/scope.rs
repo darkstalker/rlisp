@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-use std::collections::hash_map::Entry;
 use std::rc::Rc;
 use data::{Value, List, Scope, RuntimeError};
 use builtins::{BuiltinFn, load_builtins};
@@ -86,9 +85,13 @@ impl<'a> Scope for LocalScope<'a>
 
     fn set(&mut self, key: &str, val: Value)
     {
-        match self.dict.entry(key.to_string()) {
-            Entry::Occupied(mut entry) => { entry.insert(val); },
-            Entry::Vacant(_) => self.parent.set(key, val),
+        if let Some(entry) = self.dict.get_mut(key)
+        {
+            *entry = val;
+        }
+        else
+        {
+            self.parent.set(key, val)
         }
     }
 
