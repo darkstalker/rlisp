@@ -56,21 +56,18 @@ pub fn load_builtins(env: &mut GlobalScope)
         args.iter().next().ok_or(InvalidArgNum(1, 0))
     });
 
-    env.set_builtin("let", false, |args, env| {
+    fn assign_impl<'a, F>(args: &List, env: &'a mut Scope, f: F) -> Result<Value, RuntimeError>
+        where F: Fn(&'a mut Scope, &str, Value)
+    {
         let mut iter = args.iter();
         let key = check_arg!(iter, Symbol, 2, 0);
         let val = try!(check_arg!(iter, 2, 1).eval(env));
-        env.decl(&key, val.clone());
+        f(env, &key, val.clone());
         Ok(val)
-    });
+    };
 
-    env.set_builtin("set", false, |args, env| {
-        let mut iter = args.iter();
-        let key = check_arg!(iter, Symbol, 2, 0);
-        let val = try!(check_arg!(iter, 2, 1).eval(env));
-        env.set(&key, val.clone());
-        Ok(val)
-    });
+    env.set_builtin("let", false, |args, env| assign_impl(args, env, Scope::decl));
+    env.set_builtin("set", false, |args, env| assign_impl(args, env, Scope::set));
 
     env.set_builtin("funcall", true, |args, env| args.call(env));
 
