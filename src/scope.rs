@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::collections::hash_map::Entry;
 use std::rc::Rc;
 use data::{Value, List, Scope, RuntimeError};
 use builtins::{BuiltinFn, load_builtins};
@@ -49,6 +50,49 @@ impl Scope for GlobalScope
     }
 
     fn set(&mut self, key: &str, val: Value)
+    {
+        self.dict.insert(key.to_string(), val);
+    }
+
+    fn decl(&mut self, key: &str, val: Value)
+    {
+        self.set(key, val)
+    }
+}
+
+pub struct LocalScope<'a>
+{
+    dict: HashMap<String, Value>,
+    parent: &'a mut Scope,
+}
+
+impl<'a> LocalScope<'a>
+{
+    pub fn new(env: &mut Scope) -> LocalScope
+    {
+        LocalScope{ dict: HashMap::new(), parent: env }
+    }
+}
+
+impl<'a> Scope for LocalScope<'a>
+{
+    fn get(&self, key: &str) -> Option<Value>
+    {
+        match self.dict.get(key) {
+            Some(val) => Some(val.clone()),
+            None => self.parent.get(key),
+        }
+    }
+
+    fn set(&mut self, key: &str, val: Value)
+    {
+        match self.dict.entry(key.to_string()) {
+            Entry::Occupied(mut entry) => { entry.insert(val); },
+            Entry::Vacant(_) => self.parent.set(key, val),
+        }
+    }
+
+    fn decl(&mut self, key: &str, val: Value)
     {
         self.dict.insert(key.to_string(), val);
     }

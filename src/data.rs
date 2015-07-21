@@ -96,6 +96,7 @@ pub trait Scope
 {
     fn get(&self, key: &str) -> Option<Value>;
     fn set(&mut self, key: &str, val: Value);
+    fn decl(&mut self, key: &str, val: Value);
 }
 
 #[derive(Debug, PartialEq)]

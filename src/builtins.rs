@@ -1,6 +1,6 @@
 use data::{Value, List, Scope, Function, RuntimeError};
 use data::RuntimeError::*;
-use scope::GlobalScope;
+use scope::{GlobalScope, LocalScope};
 
 pub struct BuiltinFn
 {
@@ -54,6 +54,14 @@ pub fn load_builtins(env: &mut GlobalScope)
 {
     env.set_builtin("quote", false, |args, _| {
         args.iter().next().ok_or(InvalidArgNum(1, 0))
+    });
+
+    env.set_builtin("let", false, |args, env| {
+        let mut iter = args.iter();
+        let key = check_arg!(iter, Symbol, 2, 0);
+        let val = try!(check_arg!(iter, 2, 1).eval(env));
+        env.decl(&key, val.clone());
+        Ok(val)
     });
 
     env.set_builtin("set", false, |args, env| {
@@ -161,6 +169,11 @@ pub fn load_builtins(env: &mut GlobalScope)
             Value::Nil | Value::Bool(false) => iter.next().unwrap_or(Value::Nil).eval(env),
             _ => then.eval(env),
         }
+    });
+
+    env.set_builtin("begin", false, |args, env| {
+        let mut local = LocalScope::new(env);
+        args.iter().map(|val| val.eval(&mut local)).last().unwrap_or(Ok(Value::Nil))
     });
 
     env.set_builtin("+", true, |args, _| {
