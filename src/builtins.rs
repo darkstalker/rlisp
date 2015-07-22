@@ -201,4 +201,22 @@ pub fn load_builtins(env: &mut GlobalScope)
     env.set_builtin("*", true, |args, _| {
         args.fold(1.0, |acc, val| map_value!(val, Number, |n| acc * n)).map(|n| Value::Number(n))
     });
+
+    fn numeric_op<F, G>(args: &List, ident: f64, op: F) -> Result<Value, RuntimeError>
+        where F: Fn(f64) -> G, G: Fn(f64) -> f64
+    {
+        match *args {
+            List::Node(ref c1) => match c1.cdr {
+                List::Node(_) => match c1.car {
+                    Value::Number(num) => c1.cdr.fold(num, |acc, val| map_value!(val, Number, op(acc))),
+                    ref other => Err(InvalidArgType("Number", other.type_name())),
+                },
+                List::End => map_value!(c1.car, Number, op(ident)),
+            },
+            List::End => Err(InvalidArgNum(1, 0)),
+        }.map(|n| Value::Number(n))
+    }
+
+    env.set_builtin("-", true, |args, _| numeric_op(args, 0.0, |lhs| move |rhs| lhs - rhs));
+    env.set_builtin("/", true, |args, _| numeric_op(args, 1.0, |lhs| move |rhs| lhs / rhs));
 }
