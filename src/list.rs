@@ -24,6 +24,11 @@ impl List
         self.iter().map(|val| val.eval(env)).collect()
     }
 
+    pub fn eval_to_value(&self, env: &mut Scope) -> Result<Value, RuntimeError>
+    {
+        self.iter().map(|val| val.eval(env)).last().unwrap_or(Ok(Value::Nil))
+    }
+
     pub fn call(&self, env: &mut Scope) -> Result<Value, RuntimeError>
     {
         match *self {

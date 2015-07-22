@@ -1,6 +1,8 @@
+use std::rc::Rc;
 use data::{Value, List, Scope, Function, RuntimeError};
 use data::RuntimeError::*;
 use scope::{GlobalScope, LocalScope};
+use lambda::Lambda;
 
 pub struct BuiltinFn
 {
@@ -170,13 +172,26 @@ pub fn load_builtins(env: &mut GlobalScope)
 
     env.set_builtin("begin", false, |args, env| {
         let mut local = LocalScope::new(env);
-        args.iter().map(|val| val.eval(&mut local)).last().unwrap_or(Ok(Value::Nil))
+        args.eval_to_value(&mut local)
     });
 
     env.set_builtin("eval", true, |args, env| {
         let mut iter = args.iter();
         let expr = check_arg!(iter, 1, 0);
         expr.eval(env)
+    });
+
+    env.set_builtin("lambda", false, |args, _| {
+        let (arg_lst, code) = match *args {
+            List::Node(ref cons) => match cons.car {
+                Value::List(ref lst) => (lst, cons.cdr.clone()),
+                ref other => return Err(InvalidArgType("List", other.type_name())),
+            },
+            List::End => return Err(InvalidArgNum(1, 0)),
+        };
+        arg_lst.iter().map(|val| map_value!(val, Symbol, |n: Rc<String>| (*n).clone()))
+            .collect::<Result<_, _>>()
+            .map(|names| Value::Function(Rc::new(Lambda::new(names, code))))
     });
 
     env.set_builtin("+", true, |args, _| {
