@@ -26,7 +26,7 @@ impl List
 
     pub fn eval_to_value(&self, env: &mut Scope) -> Result<Value, RuntimeError>
     {
-        self.iter().map(|val| val.eval(env)).last().unwrap_or(Ok(Value::Nil))
+        self.fold(Value::Nil, |_, val| val.eval(env))
     }
 
     pub fn call(&self, env: &mut Scope) -> Result<Value, RuntimeError>
