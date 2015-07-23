@@ -128,7 +128,6 @@ pub enum RuntimeError
     InvalidArgNum(u32, u32),
     InvalidArgType(&'static str, &'static str),
     InvalidComp(&'static str, &'static str),
-    Unimplemented,
 }
 
 impl fmt::Display for RuntimeError
@@ -141,7 +140,6 @@ impl fmt::Display for RuntimeError
             RuntimeError::InvalidArgNum(n, a) => write!(f, "Expected {} arguments, but got {}", n, a),
             RuntimeError::InvalidArgType(a, b) => write!(f, "Invalid argument: expected {}, but found {}", a, b),
             RuntimeError::InvalidComp(a, b) => write!(f, "Can't compare {} and {}", a, b),
-            RuntimeError::Unimplemented => write!(f, "Unimplemented"),
         }
     }
 }
