@@ -1,5 +1,7 @@
 use std::fmt;
 use std::rc::Rc;
+use builtins::BuiltinFn;
+use lambda::Lambda;
 
 #[derive(Debug, PartialEq)]
 pub enum Token
@@ -14,7 +16,7 @@ pub enum Token
     End,    // end of string
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Value
 {
     Nil,
@@ -22,7 +24,8 @@ pub enum Value
     Number(f64),
     Symbol(Rc<String>),
     String(Rc<String>),
-    Function(Rc<Function>),
+    Builtin(Rc<BuiltinFn>),
+    Lambda(Rc<Lambda>),
     List(List),
 }
 
@@ -36,7 +39,8 @@ impl fmt::Display for Value
             Value::Number(ref val) => write!(f, "{}", val),
             Value::Symbol(ref val) => write!(f, "{}", val),
             Value::String(ref val) => write!(f, "\"{}\"", val),
-            Value::Function(ref val) => write!(f, "#function:{}", val.get_name()),
+            Value::Builtin(ref val) => write!(f, "#<builtin:{}>", val.name),
+            Value::Lambda(_) => write!(f, "#<lambda>"),
             Value::List(ref val) => write!(f, "{}", val),
         }
     }
@@ -45,23 +49,6 @@ impl fmt::Display for Value
 pub trait Function
 {
     fn call(&self, args: &List, env: &mut Scope, do_ev: bool) -> Result<Value, RuntimeError>;
-    fn get_name(&self) -> &str;
-}
-
-impl PartialEq for Function
-{
-    fn eq(&self, other: &Self) -> bool
-    {
-        self.get_name() == other.get_name()
-    }
-}
-
-impl fmt::Debug for Function
-{
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result
-    {
-        write!(f, "Function({})", self.get_name())
-    }
 }
 
 #[derive(Debug, Clone)]

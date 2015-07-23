@@ -1,3 +1,4 @@
+use std::fmt;
 use std::rc::Rc;
 use data::{Value, List, Scope, Function, RuntimeError};
 use data::RuntimeError::*;
@@ -24,10 +25,21 @@ impl Function for BuiltinFn
             (self.func)(args, env)
         }
     }
+}
 
-    fn get_name(&self) -> &str
+impl PartialEq for BuiltinFn
+{
+    fn eq(&self, other: &Self) -> bool
     {
-        self.name
+        self.name == other.name
+    }
+}
+
+impl fmt::Debug for BuiltinFn
+{
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result
+    {
+        write!(f, "BuiltinFn({})", self.name)
     }
 }
 
@@ -42,6 +54,16 @@ macro_rules! check_arg
         Some(other) => return Err(InvalidArgType(stringify!($ty), other.type_name())),
         None => return Err(InvalidArgNum($num, $cur)),
     });
+}
+
+macro_rules! check_function
+{
+    ($it:expr, $num:expr, $cur:expr) => (match $it.next() {
+        Some(Value::Builtin(func)) => func as Rc<Function>,
+        Some(Value::Lambda(func)) => func as Rc<Function>,
+        Some(other) => return Err(InvalidArgType("Function", other.type_name())),
+        None => return Err(InvalidArgNum($num, $cur)),
+    })
 }
 
 macro_rules! map_value
@@ -82,7 +104,7 @@ pub fn load_builtins(env: &mut GlobalScope)
 
     env.set_builtin("map", true, |args, env| {
         let mut iter = args.iter();
-        let func = check_arg!(iter, Function, 2, 0);
+        let func = check_function!(iter, 2, 0);
         let lst = check_arg!(iter, List, 2, 1);
         lst.iter().map(|val| func.call(&val.wrap(), env, false)).collect::<Result<_, _>>()
             .map(|lst| Value::List(lst))
@@ -90,7 +112,7 @@ pub fn load_builtins(env: &mut GlobalScope)
 
     env.set_builtin("fold", true, |args, env| {
         let mut iter = args.iter();
-        let func = check_arg!(iter, Function, 3, 0);
+        let func = check_function!(iter, 3, 0);
         let init = check_arg!(iter, 3, 1);
         let lst = check_arg!(iter, List, 3, 2);
         lst.fold(init, |acc, val| func.call(&List::cons(acc, val.wrap()), env, false))
@@ -191,7 +213,7 @@ pub fn load_builtins(env: &mut GlobalScope)
         };
         arg_lst.iter().map(|val| map_value!(val, Symbol, |n: Rc<String>| (*n).clone()))
             .collect::<Result<_, _>>()
-            .map(|names| Value::Function(Rc::new(Lambda::new(names, code))))
+            .map(|names| Value::Lambda(Rc::new(Lambda::new(names, code))))
     });
 
     env.set_builtin("+", true, |args, _| {

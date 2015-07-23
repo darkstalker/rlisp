@@ -1,6 +1,6 @@
 use std::rc::Rc;
 use std::iter::{Iterator, FromIterator, IntoIterator};
-use data::{Value, List, Cons, Scope, RuntimeError};
+use data::{Value, List, Function, Cons, Scope, RuntimeError};
 
 impl List
 {
@@ -33,7 +33,8 @@ impl List
     {
         match *self {
             List::Node(ref cons) => match try!(cons.car.eval(env)) {
-                Value::Function(ref func) => func.call(&cons.cdr, env, true),
+                Value::Builtin(ref func) => func.call(&cons.cdr, env, true),
+                Value::Lambda(ref func) => func.call(&cons.cdr, env, true),
                 other => Err(RuntimeError::InvalidCall(other.type_name())),
             },
             List::End => Ok(Value::Nil),
