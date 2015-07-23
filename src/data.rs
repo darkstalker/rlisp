@@ -48,6 +48,14 @@ pub trait Function
     fn get_name(&self) -> &str;
 }
 
+impl PartialEq for Function
+{
+    fn eq(&self, other: &Self) -> bool
+    {
+        self.get_name() == other.get_name()
+    }
+}
+
 impl fmt::Debug for Function
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result

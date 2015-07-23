@@ -52,6 +52,23 @@ impl List
     }
 }
 
+impl PartialEq for List
+{
+    fn eq(&self, other: &Self) -> bool
+    {
+        let mut a = self.iter();
+        let mut b = other.iter();
+        while let Some(va) = a.next()
+        {
+            if !b.next().map(|vb| va == vb).unwrap_or(false)
+            {
+                return false
+            }
+        }
+        if let Some(_) = b.next() { false } else { true }
+    }
+}
+
 impl FromIterator<Value> for List
 {
     fn from_iter<T>(iterator: T) -> Self

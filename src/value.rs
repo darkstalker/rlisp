@@ -35,3 +35,20 @@ impl Value
         }
     }
 }
+
+impl PartialEq for Value
+{
+    fn eq(&self, other: &Self) -> bool
+    {
+        match (self, other) {
+            (&Value::Nil, &Value::Nil) => true,
+            (&Value::Bool(a), &Value::Bool(b)) => a == b,
+            (&Value::Number(a), &Value::Number(b)) => a == b,
+            (&Value::Symbol(ref a), &Value::Symbol(ref b)) => a == b,
+            (&Value::String(ref a), &Value::String(ref b)) => a == b,
+            (&Value::Function(ref a), &Value::Function(ref b)) => a == b,
+            (&Value::List(ref a), &Value::List(ref b)) => a == b,
+            _ => false,
+        }
+    }
+}
