@@ -266,4 +266,19 @@ pub fn load_builtins(env: &mut GlobalScope)
     env.set_builtin(">", true, |args, _| comp_op(args, |a, b| a > b, |a, b| a > b));
     env.set_builtin("<=", true, |args, _| comp_op(args, |a, b| a <= b, |a, b| a <= b));
     env.set_builtin(">=", true, |args, _| comp_op(args, |a, b| a >= b, |a, b| a >= b));
+
+    env.set_builtin("atom", true, |args, _| {
+        let mut iter = args.iter();
+        let val = check_arg!(iter, 1, 0);
+        Ok(Value::Bool(match val {
+            Value::List(List::Node(_)) => false,
+            _ => true,
+        }))
+    });
+
+    env.set_builtin("typeof", true, |args, _| {
+        let mut iter = args.iter();
+        let val = check_arg!(iter, 1, 0);
+        Ok(Value::String(Rc::new(val.type_name().to_string())))
+    });
 }
