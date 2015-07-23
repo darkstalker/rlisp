@@ -242,7 +242,7 @@ pub fn load_builtins(env: &mut GlobalScope)
     env.set_builtin("-", true, |args, _| numeric_op(args, 0.0, |lhs| move |rhs| lhs - rhs));
     env.set_builtin("/", true, |args, _| numeric_op(args, 1.0, |lhs| move |rhs| lhs / rhs));
 
-    env.set_builtin("=", true, |args, _| {
+    env.set_builtin("equal", true, |args, _| {
         let mut iter = args.iter();
         let va = check_arg!(iter, 2, 0);
         let vb = check_arg!(iter, 2, 1);

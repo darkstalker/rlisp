@@ -34,8 +34,8 @@ impl GlobalScope
     pub fn load_stdlib(&mut self)
     {
         self.set("nil", Value::Nil);
-        self.set("true", Value::Bool(true));
-        self.set("false", Value::Bool(false));
+        self.set("#t", Value::Bool(true));
+        self.set("#f", Value::Bool(false));
         load_builtins(self);
     }
 }

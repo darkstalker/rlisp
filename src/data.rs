@@ -35,7 +35,7 @@ impl fmt::Display for Value
     {
         match *self {
             Value::Nil => write!(f, "nil"),
-            Value::Bool(val) => write!(f, "{}", val),
+            Value::Bool(val) => write!(f, "{}", if val { "#t" } else { "#f" }),
             Value::Number(ref val) => write!(f, "{}", val),
             Value::Symbol(ref val) => write!(f, "{}", val),
             Value::String(ref val) => write!(f, "\"{}\"", val),
