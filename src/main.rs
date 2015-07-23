@@ -1,6 +1,5 @@
 extern crate rlisp;
 
-use std::error::Error;
 use rlisp::parser::Parser;
 use rlisp::scope::GlobalScope;
 
@@ -16,7 +15,7 @@ fn main()
         match stdin.read_line(&mut text) {
             Ok(0) => break,
             Ok(_) => {},
-            Err(e) => panic!("Error reading input: {}", e.description()),
+            Err(e) => panic!("Error reading input: {}", e),
         }
 
         match Parser::new(&text).parse() {
