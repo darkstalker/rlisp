@@ -51,7 +51,7 @@ pub trait Function
     fn call(&self, args: &List, env: &mut Scope, do_ev: bool) -> Result<Value, RuntimeError>;
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum List
 {
     Node(Rc<Cons>),
@@ -69,7 +69,7 @@ impl fmt::Display for List
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Cons
 {
     pub car: Value,
