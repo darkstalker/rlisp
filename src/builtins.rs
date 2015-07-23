@@ -226,4 +226,22 @@ pub fn load_builtins(env: &mut GlobalScope)
         let vb = check_arg!(iter, 2, 1);
         Ok(Value::Bool(va == vb))
     });
+
+    fn comp_op<F, G>(args: &List, op_num: F, op_str: G) -> Result<Value, RuntimeError>
+        where F: Fn(f64, f64) -> bool, G: Fn(&str, &str) -> bool
+    {
+        let mut iter = args.iter();
+        let va = check_arg!(iter, 2, 0);
+        let vb = check_arg!(iter, 2, 1);
+        match (va, vb) {
+            (Value::Number(a), Value::Number(b)) => Ok(op_num(a, b)),
+            (Value::String(ref a), Value::String(ref b)) => Ok(op_str(a, b)),
+            (a, b) => Err(InvalidComp(a.type_name(), b.type_name())),
+        }.map(|b| Value::Bool(b))
+    }
+
+    env.set_builtin("<", true, |args, _| comp_op(args, |a, b| a < b, |a, b| a < b));
+    env.set_builtin(">", true, |args, _| comp_op(args, |a, b| a > b, |a, b| a > b));
+    env.set_builtin("<=", true, |args, _| comp_op(args, |a, b| a <= b, |a, b| a <= b));
+    env.set_builtin(">=", true, |args, _| comp_op(args, |a, b| a >= b, |a, b| a >= b));
 }
