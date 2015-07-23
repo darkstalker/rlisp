@@ -16,16 +16,16 @@ impl Lambda
     {
         Lambda{ args: args, code: code }
     }
-}
 
-impl Lambda
-{
     fn call_impl(&self, mut vals: ListIter, env: &mut Scope) -> Result<Value, RuntimeError>
     {
         let mut local = LocalScope::new(env);
-        for name in self.args.iter()
+        for (i, name) in self.args.iter().enumerate()
         {
-            local.decl(&name, vals.next().unwrap_or(Value::Nil));
+            local.decl(&name, match vals.next() {
+                Some(val) => val,
+                None => return Err(RuntimeError::InvalidArgNum(self.args.len() as u32, i as u32)),
+            });
         }
         self.code.eval_to_value(&mut local)
     }
