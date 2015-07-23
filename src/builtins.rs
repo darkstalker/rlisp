@@ -80,6 +80,7 @@ pub fn load_builtins(env: &mut GlobalScope)
         args.iter().next().ok_or(InvalidArgNum(1, 0))
     });
 
+    #[inline(always)]
     fn assign_impl<'a, F>(args: &List, env: &'a mut Scope, f: F) -> Result<Value, RuntimeError>
         where F: Fn(&'a mut Scope, &str, Value)
     {
@@ -224,6 +225,7 @@ pub fn load_builtins(env: &mut GlobalScope)
         args.fold(1.0, |acc, val| map_value!(val, Number, |n| acc * n)).map(|n| Value::Number(n))
     });
 
+    #[inline(always)]
     fn numeric_op<F, G>(args: &List, ident: f64, op: F) -> Result<Value, RuntimeError>
         where F: Fn(f64) -> G, G: Fn(f64) -> f64
     {
@@ -249,6 +251,7 @@ pub fn load_builtins(env: &mut GlobalScope)
         Ok(Value::Bool(va == vb))
     });
 
+    #[inline(always)]
     fn comp_op<F, G>(args: &List, op_num: F, op_str: G) -> Result<Value, RuntimeError>
         where F: Fn(f64, f64) -> bool, G: Fn(&str, &str) -> bool
     {
