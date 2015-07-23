@@ -1,4 +1,5 @@
 use data::{Value, List, Function, Scope, RuntimeError};
+use list::ListIter;
 use scope::LocalScope;
 
 #[derive(Debug, PartialEq)]
@@ -17,16 +18,31 @@ impl Lambda
     }
 }
 
-impl Function for Lambda
+impl Lambda
 {
-    fn call(&self, args: &List, env: &mut Scope, _: bool) -> Result<Value, RuntimeError>
+    fn call_impl(&self, mut vals: ListIter, env: &mut Scope) -> Result<Value, RuntimeError>
     {
         let mut local = LocalScope::new(env);
-        let mut vals = args.iter();
         for name in self.args.iter()
         {
             local.decl(&name, vals.next().unwrap_or(Value::Nil));
         }
         self.code.eval_to_value(&mut local)
+    }
+}
+
+impl Function for Lambda
+{
+    fn call(&self, args: &List, env: &mut Scope, do_eval: bool) -> Result<Value, RuntimeError>
+    {
+        if do_eval
+        {
+            let vals = try!(args.eval(env));
+            self.call_impl(vals.iter(), env)
+        }
+        else
+        {
+            self.call_impl(args.iter(), env)
+        }
     }
 }
