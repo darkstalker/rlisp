@@ -1,5 +1,6 @@
 use std::fmt;
 use std::rc::Rc;
+use std::cell::RefCell;
 use data::{Value, List, Scope, Function, RuntimeError};
 use data::RuntimeError::*;
 use scope::{GlobalScope, LocalScope};
@@ -9,16 +10,17 @@ pub struct BuiltinFn
 {
     pub name: &'static str,
     pub do_eval: bool,
-    pub func: Box<Fn(&List, &mut Scope) -> Result<Value, RuntimeError>>,
+    pub func: Box<Fn(&List, Rc<RefCell<Scope>>) -> Result<Value, RuntimeError>>,
 }
 
 impl Function for BuiltinFn
 {
-    fn call(&self, args: &List, env: &mut Scope, do_ev: bool) -> Result<Value, RuntimeError>
+    fn call(&self, args: &List, env: Rc<RefCell<Scope>>, do_ev: bool) -> Result<Value, RuntimeError>
     {
         if do_ev && self.do_eval
         {
-            (self.func)(&try!(args.eval(env)), env)
+            let ev_args = try!(args.eval(env.clone()));
+            (self.func)(&ev_args, env)
         }
         else
         {
@@ -81,18 +83,18 @@ pub fn load_builtins(env: &mut GlobalScope)
     });
 
     #[inline(always)]
-    fn assign_impl<'a, F>(args: &List, env: &'a mut Scope, f: F) -> Result<Value, RuntimeError>
-        where F: Fn(&'a mut Scope, &str, Value)
+    fn assign_impl<F>(args: &List, env: Rc<RefCell<Scope>>, f: F) -> Result<Value, RuntimeError>
+        where F: Fn(Rc<RefCell<Scope>>, &str, Value)
     {
         let mut iter = args.iter();
         let key = check_arg!(iter, Symbol, 2, 0);
-        let val = try!(check_arg!(iter, 2, 1).eval(env));
+        let val = try!(check_arg!(iter, 2, 1).eval(env.clone()));
         f(env, &key, val.clone());
         Ok(val)
     };
 
-    env.set_builtin("let", false, |args, env| assign_impl(args, env, Scope::decl));
-    env.set_builtin("set", false, |args, env| assign_impl(args, env, Scope::set));
+    env.set_builtin("let", false, |args, env| assign_impl(args, env, |e, k, v| e.borrow_mut().decl(k, v)));
+    env.set_builtin("set", false, |args, env| assign_impl(args, env, |e, k, v| e.borrow_mut().set(k, v)));
 
     env.set_builtin("funcall", true, |args, env| args.call(env));
 
@@ -107,7 +109,7 @@ pub fn load_builtins(env: &mut GlobalScope)
         let mut iter = args.iter();
         let func = check_function!(iter, 2, 0);
         let lst = check_arg!(iter, List, 2, 1);
-        lst.iter().map(|val| func.call(&val.wrap(), env, false)).collect::<Result<_, _>>()
+        lst.iter().map(|val| func.call(&val.wrap(), env.clone(), false)).collect::<Result<_, _>>()
             .map(|lst| Value::List(lst))
     });
 
@@ -116,7 +118,7 @@ pub fn load_builtins(env: &mut GlobalScope)
         let func = check_function!(iter, 3, 0);
         let init = check_arg!(iter, 3, 1);
         let lst = check_arg!(iter, List, 3, 2);
-        lst.fold(init, |acc, val| func.call(&List::cons(acc, val.wrap()), env, false))
+        lst.fold(init, |acc, val| func.call(&List::cons(acc, val.wrap()), env.clone(), false))
     });
 
     env.set_builtin("car", true, |args, _| {
@@ -162,7 +164,7 @@ pub fn load_builtins(env: &mut GlobalScope)
         let mut last = Value::Bool(true);
         while let Some(val) = iter.next()
         {
-            match try!(val.eval(env)) {
+            match try!(val.eval(env.clone())) {
                 v @ Value::Nil | v @ Value::Bool(false) => return Ok(v),
                 other => last = other,
             }
@@ -175,7 +177,7 @@ pub fn load_builtins(env: &mut GlobalScope)
         let mut last = Value::Bool(false);
         while let Some(val) = iter.next()
         {
-            match try!(val.eval(env)) {
+            match try!(val.eval(env.clone())) {
                 v @ Value::Nil | v @ Value::Bool(false) => last = v,
                 other => return Ok(other),
             }
@@ -187,15 +189,15 @@ pub fn load_builtins(env: &mut GlobalScope)
         let mut iter = args.iter();
         let cond = check_arg!(iter, 2, 0);
         let then = check_arg!(iter, 2, 1);
-        match try!(cond.eval(env)) {
+        match try!(cond.eval(env.clone())) {
             Value::Nil | Value::Bool(false) => iter.next().unwrap_or(Value::Nil).eval(env),
             _ => then.eval(env),
         }
     });
 
     env.set_builtin("begin", false, |args, env| {
-        let mut local = LocalScope::new(env);
-        args.eval_to_value(&mut local)
+        let local = Rc::new(RefCell::new(LocalScope::new(env)));
+        args.eval_to_value(local)
     });
 
     env.set_builtin("eval", true, |args, env| {
@@ -204,7 +206,7 @@ pub fn load_builtins(env: &mut GlobalScope)
         expr.eval(env)
     });
 
-    env.set_builtin("lambda", false, |args, _| {
+    env.set_builtin("lambda", false, |args, env| {
         let (arg_lst, code) = match *args {
             List::Node(ref cons) => match cons.car {
                 Value::List(ref lst) => (lst, cons.cdr.clone()),
@@ -214,7 +216,7 @@ pub fn load_builtins(env: &mut GlobalScope)
         };
         arg_lst.iter().map(|val| map_value!(val, Symbol, |n: Rc<String>| (*n).clone()))
             .collect::<Result<_, _>>()
-            .map(|names| Value::Lambda(Rc::new(Lambda::new(names, code))))
+            .map(|names| Value::Lambda(Rc::new(Lambda::new(names, code, env))))
     });
 
     env.set_builtin("+", true, |args, _| {

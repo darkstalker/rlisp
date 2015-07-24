@@ -1,4 +1,5 @@
 use std::rc::Rc;
+use std::cell::RefCell;
 use data::{Value, List, Scope, RuntimeError};
 
 impl Value
@@ -26,10 +27,10 @@ impl Value
         List::cons(self, List::End)
     }
 
-    pub fn eval(&self, env: &mut Scope) -> Result<Value, RuntimeError>
+    pub fn eval(&self, env: Rc<RefCell<Scope>>) -> Result<Value, RuntimeError>
     {
         match *self {
-            Value::Symbol(ref name) => env.get(name).ok_or(RuntimeError::UnkSymbol(name.clone())),
+            Value::Symbol(ref name) => env.borrow().get(name).ok_or(RuntimeError::UnkSymbol(name.clone())),
             Value::List(ref lst) => lst.call(env),
             _ => Ok(self.clone()),
         }

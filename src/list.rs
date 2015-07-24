@@ -1,4 +1,5 @@
 use std::rc::Rc;
+use std::cell::RefCell;
 use std::iter::{Iterator, FromIterator, IntoIterator};
 use data::{Value, List, Function, Cons, Scope, RuntimeError};
 
@@ -19,20 +20,20 @@ impl List
         ListIter(self)
     }
 
-    pub fn eval(&self, env: &mut Scope) -> Result<List, RuntimeError>
+    pub fn eval(&self, env: Rc<RefCell<Scope>>) -> Result<List, RuntimeError>
     {
-        self.iter().map(|val| val.eval(env)).collect()
+        self.iter().map(|val| val.eval(env.clone())).collect()
     }
 
-    pub fn eval_to_value(&self, env: &mut Scope) -> Result<Value, RuntimeError>
+    pub fn eval_to_value(&self, env: Rc<RefCell<Scope>>) -> Result<Value, RuntimeError>
     {
-        self.fold(Value::Nil, |_, val| val.eval(env))
+        self.fold(Value::Nil, |_, val| val.eval(env.clone()))
     }
 
-    pub fn call(&self, env: &mut Scope) -> Result<Value, RuntimeError>
+    pub fn call(&self, env: Rc<RefCell<Scope>>) -> Result<Value, RuntimeError>
     {
         match *self {
-            List::Node(ref cons) => match try!(cons.car.eval(env)) {
+            List::Node(ref cons) => match try!(cons.car.eval(env.clone())) {
                 Value::Builtin(ref func) => func.call(&cons.cdr, env, true),
                 Value::Lambda(ref func) => func.call(&cons.cdr, env, true),
                 other => Err(RuntimeError::InvalidCall(other.type_name())),

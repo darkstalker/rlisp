@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use std::rc::Rc;
+use std::cell::RefCell;
 use data::{Value, List, Scope, RuntimeError};
 use builtins::{BuiltinFn, load_builtins};
 
@@ -26,7 +27,7 @@ impl GlobalScope
     }
 
     pub fn set_builtin<F>(&mut self, key: &'static str, do_eval: bool, val: F)
-        where F: Fn(&List, &mut Scope) -> Result<Value, RuntimeError> + 'static
+        where F: Fn(&List, Rc<RefCell<Scope>>) -> Result<Value, RuntimeError> + 'static
     {
         self.set(key, Value::Builtin(Rc::new(BuiltinFn{ name: key, do_eval: do_eval, func: Box::new(val) })))
     }
@@ -58,27 +59,27 @@ impl Scope for GlobalScope
     }
 }
 
-pub struct LocalScope<'a>
+pub struct LocalScope
 {
     dict: HashMap<String, Value>,
-    parent: &'a mut Scope,
+    parent: Rc<RefCell<Scope>>,
 }
 
-impl<'a> LocalScope<'a>
+impl LocalScope
 {
-    pub fn new(env: &mut Scope) -> LocalScope
+    pub fn new(env: Rc<RefCell<Scope>>) -> LocalScope
     {
         LocalScope{ dict: HashMap::new(), parent: env }
     }
 }
 
-impl<'a> Scope for LocalScope<'a>
+impl Scope for LocalScope
 {
     fn get(&self, key: &str) -> Option<Value>
     {
         match self.dict.get(key) {
             Some(val) => Some(val.clone()),
-            None => self.parent.get(key),
+            None => self.parent.borrow().get(key),
         }
     }
 
@@ -90,7 +91,7 @@ impl<'a> Scope for LocalScope<'a>
         }
         else
         {
-            self.parent.set(key, val)
+            self.parent.borrow_mut().set(key, val)
         }
     }
 

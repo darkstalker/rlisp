@@ -1,5 +1,6 @@
 use std::fmt;
 use std::rc::Rc;
+use std::cell::RefCell;
 use builtins::BuiltinFn;
 use lambda::Lambda;
 
@@ -48,7 +49,7 @@ impl fmt::Display for Value
 
 pub trait Function
 {
-    fn call(&self, args: &List, env: &mut Scope, do_ev: bool) -> Result<Value, RuntimeError>;
+    fn call(&self, args: &List, env: Rc<RefCell<Scope>>, do_ev: bool) -> Result<Value, RuntimeError>;
 }
 
 #[derive(Debug, Clone, PartialEq)]
