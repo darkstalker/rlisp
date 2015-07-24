@@ -1,7 +1,6 @@
 use std::fmt;
 use std::rc::Rc;
-use std::cell::RefCell;
-use data::{Value, List, Scope, Function, RuntimeError};
+use data::{Value, List, RcScope, Function, RuntimeError};
 use data::RuntimeError::*;
 use scope::{GlobalScope, LocalScope};
 use lambda::Lambda;
@@ -10,12 +9,12 @@ pub struct BuiltinFn
 {
     pub name: &'static str,
     pub do_eval: bool,
-    pub func: Box<Fn(&List, Rc<RefCell<Scope>>) -> Result<Value, RuntimeError>>,
+    pub func: Box<Fn(&List, RcScope) -> Result<Value, RuntimeError>>,
 }
 
 impl Function for BuiltinFn
 {
-    fn call(&self, args: &List, env: Rc<RefCell<Scope>>, do_ev: bool) -> Result<Value, RuntimeError>
+    fn call(&self, args: &List, env: RcScope, do_ev: bool) -> Result<Value, RuntimeError>
     {
         if do_ev && self.do_eval
         {
@@ -83,8 +82,8 @@ pub fn load_builtins(env: &mut GlobalScope)
     });
 
     #[inline(always)]
-    fn assign_impl<F>(args: &List, env: Rc<RefCell<Scope>>, f: F) -> Result<Value, RuntimeError>
-        where F: Fn(Rc<RefCell<Scope>>, &str, Value)
+    fn assign_impl<F>(args: &List, env: RcScope, f: F) -> Result<Value, RuntimeError>
+        where F: Fn(RcScope, &str, Value)
     {
         let mut iter = args.iter();
         let key = check_arg!(iter, Symbol, 2, 0);
@@ -196,7 +195,7 @@ pub fn load_builtins(env: &mut GlobalScope)
     });
 
     env.set_builtin("begin", false, |args, env| {
-        let local = Rc::new(RefCell::new(LocalScope::new(env)));
+        let local = LocalScope::new(env).wrap();
         args.eval_to_value(local)
     });
 

@@ -1,7 +1,6 @@
 use std::rc::Rc;
-use std::cell::RefCell;
 use std::iter::{Iterator, FromIterator, IntoIterator};
-use data::{Value, List, Function, Cons, Scope, RuntimeError};
+use data::{Value, List, Function, Cons, RcScope, RuntimeError};
 
 impl List
 {
@@ -20,17 +19,17 @@ impl List
         ListIter(self)
     }
 
-    pub fn eval(&self, env: Rc<RefCell<Scope>>) -> Result<List, RuntimeError>
+    pub fn eval(&self, env: RcScope) -> Result<List, RuntimeError>
     {
         self.iter().map(|val| val.eval(env.clone())).collect()
     }
 
-    pub fn eval_to_value(&self, env: Rc<RefCell<Scope>>) -> Result<Value, RuntimeError>
+    pub fn eval_to_value(&self, env: RcScope) -> Result<Value, RuntimeError>
     {
         self.fold(Value::Nil, |_, val| val.eval(env.clone()))
     }
 
-    pub fn call(&self, env: Rc<RefCell<Scope>>) -> Result<Value, RuntimeError>
+    pub fn call(&self, env: RcScope) -> Result<Value, RuntimeError>
     {
         match *self {
             List::Node(ref cons) => match try!(cons.car.eval(env.clone())) {

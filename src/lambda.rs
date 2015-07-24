@@ -1,7 +1,5 @@
 use std::fmt;
-use std::rc::Rc;
-use std::cell::RefCell;
-use data::{Value, List, Function, Scope, RuntimeError};
+use data::{Value, List, Function, Scope, RcScope, RuntimeError};
 use list::ListIter;
 use scope::LocalScope;
 
@@ -9,7 +7,7 @@ pub struct Lambda
 {
     args: Vec<String>,
     code: List,
-    env: Rc<RefCell<Scope>>,
+    env: RcScope,
 }
 
 //FIXME: not correct
@@ -31,7 +29,7 @@ impl fmt::Debug for Lambda
 
 impl Lambda
 {
-    pub fn new(args: Vec<String>, code: List, env: Rc<RefCell<Scope>>) -> Lambda
+    pub fn new(args: Vec<String>, code: List, env: RcScope) -> Lambda
     {
         Lambda{ args: args, code: code, env: env }
     }
@@ -46,13 +44,13 @@ impl Lambda
                 None => return Err(RuntimeError::InvalidArgNum(self.args.len() as u32, i as u32)),
             });
         }
-        self.code.eval_to_value(Rc::new(RefCell::new(local)) as Rc<RefCell<Scope>>)
+        self.code.eval_to_value(local.wrap())
     }
 }
 
 impl Function for Lambda
 {
-    fn call(&self, args: &List, env: Rc<RefCell<Scope>>, do_eval: bool) -> Result<Value, RuntimeError>
+    fn call(&self, args: &List, env: RcScope, do_eval: bool) -> Result<Value, RuntimeError>
     {
         if do_eval
         {

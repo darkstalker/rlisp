@@ -1,14 +1,12 @@
 extern crate rlisp;
 
-use std::rc::Rc;
-use std::cell::RefCell;
 use rlisp::parser::Parser;
 use rlisp::scope::GlobalScope;
 
 fn main()
 {
     let mut stdin = std::io::stdin();
-    let env = Rc::new(RefCell::new(GlobalScope::new()));
+    let env = GlobalScope::new().wrap();
     env.borrow_mut().load_stdlib();
 
     loop

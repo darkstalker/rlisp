@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::rc::Rc;
 use std::cell::RefCell;
-use data::{Value, List, Scope, RuntimeError};
+use data::{Value, List, Scope, RcScope, RuntimeError};
 use builtins::{BuiltinFn, load_builtins};
 
 pub struct GlobalScope
@@ -16,6 +16,11 @@ impl GlobalScope
         GlobalScope{ dict: HashMap::new() }
     }
 
+    pub fn wrap(self) -> Rc<RefCell<GlobalScope>>
+    {
+        Rc::new(RefCell::new(self))
+    }
+
     pub fn set_number(&mut self, key: &str, val: f64)
     {
         self.set(key, Value::Number(val))
@@ -27,7 +32,7 @@ impl GlobalScope
     }
 
     pub fn set_builtin<F>(&mut self, key: &'static str, do_eval: bool, val: F)
-        where F: Fn(&List, Rc<RefCell<Scope>>) -> Result<Value, RuntimeError> + 'static
+        where F: Fn(&List, RcScope) -> Result<Value, RuntimeError> + 'static
     {
         self.set(key, Value::Builtin(Rc::new(BuiltinFn{ name: key, do_eval: do_eval, func: Box::new(val) })))
     }
@@ -62,14 +67,19 @@ impl Scope for GlobalScope
 pub struct LocalScope
 {
     dict: HashMap<String, Value>,
-    parent: Rc<RefCell<Scope>>,
+    parent: RcScope,
 }
 
 impl LocalScope
 {
-    pub fn new(env: Rc<RefCell<Scope>>) -> LocalScope
+    pub fn new(env: RcScope) -> LocalScope
     {
         LocalScope{ dict: HashMap::new(), parent: env }
+    }
+
+    pub fn wrap(self) -> Rc<RefCell<LocalScope>>
+    {
+        Rc::new(RefCell::new(self))
     }
 }
 

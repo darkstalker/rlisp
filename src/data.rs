@@ -95,6 +95,8 @@ pub trait Scope
     fn decl(&mut self, key: &str, val: Value);
 }
 
+pub type RcScope = Rc<RefCell<Scope>>;
+
 #[derive(Debug, PartialEq)]
 pub enum ParseError
 {
