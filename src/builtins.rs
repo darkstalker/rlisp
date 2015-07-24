@@ -32,7 +32,7 @@ impl PartialEq for BuiltinFn
 {
     fn eq(&self, other: &Self) -> bool
     {
-        self.name == other.name
+        self as *const _ == other as *const _
     }
 }
 

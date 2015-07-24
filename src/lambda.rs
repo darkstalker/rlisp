@@ -10,12 +10,11 @@ pub struct Lambda
     env: RcScope,
 }
 
-//FIXME: not correct
 impl PartialEq for Lambda
 {
     fn eq(&self, other: &Self) -> bool
     {
-        self.args == other.args && self.code == other.code
+        self as *const _ == other as *const _
     }
 }
 
