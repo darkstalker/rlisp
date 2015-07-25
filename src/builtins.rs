@@ -40,7 +40,7 @@ impl fmt::Debug for BuiltinFn
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result
     {
-        write!(f, "BuiltinFn({})", self.name)
+        write!(f, "{}", self.name)
     }
 }
 
@@ -284,5 +284,19 @@ pub fn load_builtins(env: &mut GlobalScope)
         let mut iter = args.iter();
         let val = check_arg!(iter, 1, 0);
         Ok(Value::String(Rc::new(val.type_name().to_string())))
+    });
+
+    env.set_builtin("display", true, |args, _| {
+        let mut iter = args.iter();
+        let val = check_arg!(iter, 1, 0);
+        println!("{}", val);
+        Ok(val)
+    });
+
+    env.set_builtin("debug", true, |args, _| {
+        let mut iter = args.iter();
+        let val = check_arg!(iter, 1, 0);
+        println!("{:?}", val);
+        Ok(val)
     });
 }
