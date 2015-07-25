@@ -1,8 +1,8 @@
 use std::fmt;
 use std::rc::Rc;
-use std::cell::RefCell;
 use builtins::BuiltinFn;
 use lambda::Lambda;
+use scope::RcScope;
 
 #[derive(Debug, PartialEq)]
 pub enum Token
@@ -49,7 +49,7 @@ impl fmt::Display for Value
 
 pub trait Function
 {
-    fn call(&self, args: &List, env: Rc<RefCell<Scope>>, do_ev: bool) -> Result<Value, RuntimeError>;
+    fn call(&self, args: &List, env: RcScope, do_ev: bool) -> Result<Value, RuntimeError>;
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -87,15 +87,6 @@ impl fmt::Display for Cons
         }
     }
 }
-
-pub trait Scope
-{
-    fn get(&self, key: &str) -> Option<Value>;
-    fn set(&mut self, key: &str, val: Value);
-    fn decl(&mut self, key: &str, val: Value);
-}
-
-pub type RcScope = Rc<RefCell<Scope>>;
 
 #[derive(Debug, PartialEq)]
 pub enum ParseError

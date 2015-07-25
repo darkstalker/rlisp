@@ -1,34 +1,58 @@
 use std::collections::HashMap;
 use std::rc::Rc;
 use std::cell::RefCell;
-use data::{Value, List, Scope, RcScope, RuntimeError};
+use data::{Value, List, RuntimeError};
 use builtins::{BuiltinFn, load_builtins};
 
-pub struct GlobalScope
+pub type RcScope = Rc<RefCell<Scope>>;
+
+pub struct Scope
 {
     dict: HashMap<String, Value>,
+    parent: Option<RcScope>,
 }
 
-impl GlobalScope
+impl Scope
 {
-    pub fn new() -> GlobalScope
+    pub fn local(env: RcScope) -> Scope
     {
-        GlobalScope{ dict: HashMap::new() }
+        Scope{ dict: HashMap::new(), parent: Some(env) }
     }
 
-    pub fn wrap(self) -> Rc<RefCell<GlobalScope>>
+    pub fn global() -> Scope
+    {
+        Scope{ dict: HashMap::new(), parent: None }
+    }
+
+    pub fn wrap(self) -> RcScope
     {
         Rc::new(RefCell::new(self))
     }
 
-    pub fn set_number(&mut self, key: &str, val: f64)
+    pub fn get(&self, key: &str) -> Option<Value>
     {
-        self.set(key, Value::Number(val))
+        match self.dict.get(key) {
+            Some(val) => Some(val.clone()),
+            None => self.parent.as_ref().and_then(|p| p.borrow().get(key)),
+        }
     }
 
-    pub fn set_string(&mut self, key: &str, val: String)
+    pub fn set(&mut self, key: &str, val: Value)
     {
-        self.set(key, Value::String(Rc::new(val)))
+        if let Some(entry) = self.dict.get_mut(key)
+        {
+            *entry = val;
+            return
+        }
+        match self.parent {
+            Some(ref p) => p.borrow_mut().set(key, val),
+            None => self.decl(key, val),
+        }
+    }
+
+    pub fn decl(&mut self, key: &str, val: Value)
+    {
+        self.dict.insert(key.to_string(), val);
     }
 
     pub fn set_builtin<F>(&mut self, key: &'static str, do_eval: bool, val: F)
@@ -43,70 +67,5 @@ impl GlobalScope
         self.set("#t", Value::Bool(true));
         self.set("#f", Value::Bool(false));
         load_builtins(self);
-    }
-}
-
-impl Scope for GlobalScope
-{
-    fn get(&self, key: &str) -> Option<Value>
-    {
-        self.dict.get(key).map(|v| v.clone())
-    }
-
-    fn set(&mut self, key: &str, val: Value)
-    {
-        self.dict.insert(key.to_string(), val);
-    }
-
-    fn decl(&mut self, key: &str, val: Value)
-    {
-        self.set(key, val)
-    }
-}
-
-pub struct LocalScope
-{
-    dict: HashMap<String, Value>,
-    parent: RcScope,
-}
-
-impl LocalScope
-{
-    pub fn new(env: RcScope) -> LocalScope
-    {
-        LocalScope{ dict: HashMap::new(), parent: env }
-    }
-
-    pub fn wrap(self) -> Rc<RefCell<LocalScope>>
-    {
-        Rc::new(RefCell::new(self))
-    }
-}
-
-impl Scope for LocalScope
-{
-    fn get(&self, key: &str) -> Option<Value>
-    {
-        match self.dict.get(key) {
-            Some(val) => Some(val.clone()),
-            None => self.parent.borrow().get(key),
-        }
-    }
-
-    fn set(&mut self, key: &str, val: Value)
-    {
-        if let Some(entry) = self.dict.get_mut(key)
-        {
-            *entry = val;
-        }
-        else
-        {
-            self.parent.borrow_mut().set(key, val)
-        }
-    }
-
-    fn decl(&mut self, key: &str, val: Value)
-    {
-        self.dict.insert(key.to_string(), val);
     }
 }

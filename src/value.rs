@@ -1,5 +1,6 @@
 use std::rc::Rc;
-use data::{Value, List, RcScope, RuntimeError};
+use data::{Value, List, RuntimeError};
+use scope::RcScope;
 
 impl Value
 {

@@ -1,7 +1,7 @@
 use std::fmt;
-use data::{Value, List, Function, Scope, RcScope, RuntimeError};
+use data::{Value, List, Function, RuntimeError};
 use list::ListIter;
-use scope::LocalScope;
+use scope::{Scope, RcScope};
 
 pub struct Lambda
 {
@@ -35,7 +35,7 @@ impl Lambda
 
     fn call_impl(&self, mut vals: ListIter) -> Result<Value, RuntimeError>
     {
-        let mut local = LocalScope::new(self.env.clone());
+        let mut local = Scope::local(self.env.clone());
         for (i, name) in self.args.iter().enumerate()
         {
             local.decl(&name, match vals.next() {

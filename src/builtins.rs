@@ -1,8 +1,8 @@
 use std::fmt;
 use std::rc::Rc;
-use data::{Value, List, RcScope, Function, RuntimeError};
+use data::{Value, List, Function, RuntimeError};
 use data::RuntimeError::*;
-use scope::{GlobalScope, LocalScope};
+use scope::{Scope, RcScope};
 use lambda::Lambda;
 
 pub struct BuiltinFn
@@ -75,7 +75,7 @@ macro_rules! map_value
     })
 }
 
-pub fn load_builtins(env: &mut GlobalScope)
+pub fn load_builtins(env: &mut Scope)
 {
     env.set_builtin("quote", false, |args, _| {
         args.iter().next().ok_or(InvalidArgNum(1, 0))
@@ -195,7 +195,7 @@ pub fn load_builtins(env: &mut GlobalScope)
     });
 
     env.set_builtin("begin", false, |args, env| {
-        let local = LocalScope::new(env).wrap();
+        let local = Scope::local(env).wrap();
         args.eval_to_value(local)
     });
 

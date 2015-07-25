@@ -1,6 +1,7 @@
 use std::rc::Rc;
 use std::iter::{Iterator, FromIterator, IntoIterator};
-use data::{Value, List, Function, Cons, RcScope, RuntimeError};
+use data::{Value, List, Function, Cons, RuntimeError};
+use scope::RcScope;
 
 impl List
 {
