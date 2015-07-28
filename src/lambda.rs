@@ -22,7 +22,8 @@ impl fmt::Debug for Lambda
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result
     {
-        write!(f, "args:{:?} code:{:?} ", self.args, self.code)
+        write!(f, "args: {:?} code: {}", self.args,
+            self.code.iter().fold(String::new(), |a, v| a + &format!("{} ", v)))
     }
 }
 
