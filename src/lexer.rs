@@ -6,7 +6,7 @@ fn extract_string(input: &mut Chars) -> Result<String, ParseError>
 {
     let mut buf = String::new();
     let mut escape = false;
-    while let Some(chr) = input.next()
+    for chr in input
     {
         if escape
         {
@@ -33,8 +33,7 @@ fn extract_string(input: &mut Chars) -> Result<String, ParseError>
 fn extract_ident(input: &mut Chars, first: char) -> String
 {
     let mut buf = first.to_string();
-    let mut copied = input.clone();
-    while let Some(chr) = copied.next()
+    for chr in input.clone()
     {
         match chr {
             ' ' | '(' | ')' | '\n' | '\t' => break,

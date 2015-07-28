@@ -5,7 +5,6 @@ use data::{Value, List, Function, RuntimeError};
 use data::RuntimeError::*;
 use scope::{Scope, RcScope};
 use lambda::Lambda;
-use list::fold_result;
 
 pub struct BuiltinFn
 {
@@ -75,6 +74,16 @@ macro_rules! map_value
         Value::$ty(val) => Ok($f(val)),
         _ => Err(InvalidArgType(stringify!($ty), $v.type_name())),
     })
+}
+
+fn fold_result<I, T, F>(iter: I, mut acc: T, mut f: F) -> Result<T, RuntimeError>
+    where F: FnMut(T, Value) -> Result<T, RuntimeError>, I: Iterator<Item=Value>
+{
+    for val in iter
+    {
+        acc = try!(f(acc, val))
+    }
+    Ok(acc)
 }
 
 pub fn load_builtins(env: &mut Scope)

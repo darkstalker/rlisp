@@ -67,13 +67,3 @@ impl<'a> Iterator for ListIter<'a>
         }
     }
 }
-
-pub fn fold_result<I, T, F>(mut iter: I, mut acc: T, mut f: F) -> Result<T, RuntimeError>
-    where F: FnMut(T, Value) -> Result<T, RuntimeError>, I: Iterator<Item=Value>
-{
-    while let Some(val) = iter.next()
-    {
-        acc = try!(f(acc, val))
-    }
-    Ok(acc)
-}
