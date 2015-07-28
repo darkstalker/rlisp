@@ -55,7 +55,7 @@ impl<'a> Parser<'a>
             list.push(try!(self.parse_value()));
         }
         self.next_token();  // consume the ')'
-        Ok(Value::List(List::from_vec(list)))
+        Ok(Value::List(List::from_de_iter(list.into_iter())))
     }
 
     // parses the entire chunk

@@ -1,12 +1,12 @@
 use std::fmt;
+use std::collections::VecDeque;
 use data::{Value, List, Function, RuntimeError};
-use list::ListIter;
 use scope::{Scope, RcScope};
 
 pub struct Lambda
 {
     args: Vec<String>,
-    code: List,
+    code: VecDeque<Value>,
     env: RcScope,
 }
 
@@ -22,28 +22,15 @@ impl fmt::Debug for Lambda
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result
     {
-        write!(f, "args:{:?} code:{} ", self.args, self.code)
+        write!(f, "args:{:?} code:{:?} ", self.args, self.code)
     }
 }
 
 impl Lambda
 {
-    pub fn new(args: Vec<String>, code: List, env: RcScope) -> Lambda
+    pub fn new(args: Vec<String>, code: VecDeque<Value>, env: RcScope) -> Lambda
     {
         Lambda{ args: args, code: code, env: env }
-    }
-
-    fn call_impl(&self, mut vals: ListIter) -> Result<Value, RuntimeError>
-    {
-        let mut local = Scope::local(self.env.clone());
-        for (i, name) in self.args.iter().enumerate()
-        {
-            local.decl(&name, match vals.next() {
-                Some(val) => val,
-                None => return Err(RuntimeError::InvalidArgNum(self.args.len() as u32, i as u32)),
-            });
-        }
-        self.code.eval_to_value(local.wrap())
     }
 }
 
@@ -51,14 +38,22 @@ impl Function for Lambda
 {
     fn call(&self, args: &List, env: RcScope, do_eval: bool) -> Result<Value, RuntimeError>
     {
-        if do_eval
+        let vals = if do_eval { try!(args.eval(env)) } else { args.iter().collect() };
+        let (na, nv) = (self.args.len(), vals.len());
+        if nv < na { return Err(RuntimeError::InvalidArgNum(na as u32, nv as u32)) }
+
+        let mut local = Scope::local(self.env.clone());
+        for (name, val) in self.args.iter().zip(vals.into_iter())
         {
-            let vals = try!(args.eval(env));
-            self.call_impl(vals.iter())
+            local.decl(&name, val);
         }
-        else
+
+        let wenv = local.wrap();
+        let mut last = Value::Nil;
+        for val in self.code.iter()
         {
-            self.call_impl(args.iter())
+            last = try!(val.eval(wenv.clone()));
         }
+        Ok(last)
     }
 }

@@ -1,7 +1,7 @@
-use std::collections::HashMap;
 use std::rc::Rc;
+use std::collections::{HashMap, VecDeque};
 use std::cell::RefCell;
-use data::{Value, List, RuntimeError};
+use data::{Value, RuntimeError};
 use builtins::{BuiltinFn, load_builtins};
 
 pub type RcScope = Rc<RefCell<Scope>>;
@@ -56,7 +56,7 @@ impl Scope
     }
 
     pub fn set_builtin<F>(&mut self, key: &'static str, do_eval: bool, val: F)
-        where F: Fn(&List, RcScope) -> Result<Value, RuntimeError> + 'static
+        where F: Fn(VecDeque<Value>, RcScope) -> Result<Value, RuntimeError> + 'static
     {
         self.set(key, Value::Builtin(Rc::new(BuiltinFn{ name: key, do_eval: do_eval, func: Box::new(val) })))
     }

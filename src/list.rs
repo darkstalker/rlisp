@@ -1,5 +1,6 @@
 use std::rc::Rc;
-use std::iter::{Iterator, FromIterator, IntoIterator};
+use std::collections::VecDeque;
+use std::iter::{Iterator, FromIterator, IntoIterator, DoubleEndedIterator};
 use data::{Value, List, Function, Cons, RuntimeError};
 use scope::RcScope;
 
@@ -10,9 +11,10 @@ impl List
         List::Node(Rc::new(Cons{ car: car, cdr: cdr }))
     }
 
-    pub fn from_vec(vec: Vec<Value>) -> List
+    pub fn from_de_iter<I>(iter: I) -> List
+        where I: DoubleEndedIterator<Item=Value>
     {
-        vec.into_iter().rev().fold(List::End, |cdr, car| List::cons(car, cdr))
+        iter.rev().fold(List::End, |cdr, car| List::cons(car, cdr))
     }
 
     pub fn iter(&self) -> ListIter
@@ -20,14 +22,9 @@ impl List
         ListIter(self)
     }
 
-    pub fn eval(&self, env: RcScope) -> Result<List, RuntimeError>
+    pub fn eval(&self, env: RcScope) -> Result<VecDeque<Value>, RuntimeError>
     {
         self.iter().map(|val| val.eval(env.clone())).collect()
-    }
-
-    pub fn eval_to_value(&self, env: RcScope) -> Result<Value, RuntimeError>
-    {
-        self.fold(Value::Nil, |_, val| val.eval(env.clone()))
     }
 
     pub fn call(&self, env: RcScope) -> Result<Value, RuntimeError>
@@ -41,17 +38,6 @@ impl List
             List::End => Ok(Value::Nil),
         }
     }
-
-    pub fn fold<T, F>(&self, mut acc: T, mut f: F) -> Result<T, RuntimeError>
-        where F: FnMut(T, Value) -> Result<T, RuntimeError>
-    {
-        let mut iter = self.iter();
-        while let Some(val) = iter.next()
-        {
-            acc = try!(f(acc, val))
-        }
-        Ok(acc)
-    }
 }
 
 impl FromIterator<Value> for List
@@ -59,7 +45,7 @@ impl FromIterator<Value> for List
     fn from_iter<T>(iterator: T) -> Self
         where T: IntoIterator<Item=Value>
     {
-        List::from_vec(iterator.into_iter().collect())
+        List::from_de_iter(iterator.into_iter().collect::<Vec<_>>().into_iter())    //ugly
     }
 }
 
@@ -80,4 +66,14 @@ impl<'a> Iterator for ListIter<'a>
             List::End => None,
         }
     }
+}
+
+pub fn fold_result<I, T, F>(mut iter: I, mut acc: T, mut f: F) -> Result<T, RuntimeError>
+    where F: FnMut(T, Value) -> Result<T, RuntimeError>, I: Iterator<Item=Value>
+{
+    while let Some(val) = iter.next()
+    {
+        acc = try!(f(acc, val))
+    }
+    Ok(acc)
 }
