@@ -1,6 +1,6 @@
 use std::rc::Rc;
 use std::collections::VecDeque;
-use std::iter::{Iterator, FromIterator, IntoIterator, DoubleEndedIterator};
+use std::iter::FromIterator;
 use data::{Value, List, Function, Cons, RuntimeError};
 use scope::RcScope;
 
