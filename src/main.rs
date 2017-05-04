@@ -5,7 +5,7 @@ use rlisp::scope::Scope;
 
 fn main()
 {
-    let mut stdin = std::io::stdin();
+    let stdin = std::io::stdin();
     let env = Scope::global().wrap();
     env.borrow_mut().load_stdlib();
 

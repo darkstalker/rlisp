@@ -14,13 +14,13 @@ impl<'a> Parser<'a>
     pub fn new(text: &str) -> Parser
     {
         let mut tokens = Tokenizer::new(text);
-        Parser{ cur_tok: tokens.next(), input: tokens }
+        Parser{ cur_tok: tokens.next_token(), input: tokens }
     }
 
     // consumes the current token and pulls a new one
     fn next_token(&mut self) -> Token
     {
-        mem::replace(&mut self.cur_tok, self.input.next())
+        mem::replace(&mut self.cur_tok, self.input.next_token())
     }
 
     // parses one expression

@@ -30,7 +30,7 @@ impl Value
     pub fn eval(&self, env: RcScope) -> Result<Value, RuntimeError>
     {
         match *self {
-            Value::Symbol(ref name) => env.borrow().get(name).ok_or(RuntimeError::UnkSymbol(name.clone())),
+            Value::Symbol(ref name) => env.borrow().get(name).ok_or_else(|| RuntimeError::UnkSymbol(name.clone())),
             Value::List(ref lst) => lst.call(env),
             _ => Ok(self.clone()),
         }

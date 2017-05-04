@@ -82,7 +82,7 @@ impl<'a> Tokenizer<'a>
         Tokenizer(text.chars())
     }
 
-    pub fn next(&mut self) -> Token
+    pub fn next_token(&mut self) -> Token
     {
         extract_token(&mut self.0)
     }

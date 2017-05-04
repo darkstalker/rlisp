@@ -92,7 +92,7 @@ pub fn load_builtins(env: &mut Scope)
         args.pop_front().ok_or(InvalidArgNum(1, 0))
     });
 
-    #[inline(always)]
+    #[inline]
     fn assign_impl<F>(mut args: VecDeque<Value>, env: RcScope, f: F) -> Result<Value, RuntimeError>
         where F: Fn(RcScope, &str, Value)
     {
@@ -119,7 +119,7 @@ pub fn load_builtins(env: &mut Scope)
         let func = check_function!(args, 2, 0);
         let lst = check_arg!(args, List, 2, 1);
         lst.iter().map(|val| func.call(&val.wrap(), env.clone(), false)).collect::<Result<_, _>>()
-            .map(|lst| Value::List(lst))
+            .map(Value::List)
     });
 
     env.set_builtin("fold", true, |mut args, env| {
@@ -219,14 +219,14 @@ pub fn load_builtins(env: &mut Scope)
     });
 
     env.set_builtin("+", true, |args, _| {
-        fold_result(args.into_iter(), 0.0, |acc, val| map_value!(val, Number, |n| acc + n)).map(|n| Value::Number(n))
+        fold_result(args.into_iter(), 0.0, |acc, val| map_value!(val, Number, |n| acc + n)).map(Value::Number)
     });
 
     env.set_builtin("*", true, |args, _| {
-        fold_result(args.into_iter(), 1.0, |acc, val| map_value!(val, Number, |n| acc * n)).map(|n| Value::Number(n))
+        fold_result(args.into_iter(), 1.0, |acc, val| map_value!(val, Number, |n| acc * n)).map(Value::Number)
     });
 
-    #[inline(always)]
+    #[inline]
     fn numeric_op<F, G>(mut args: VecDeque<Value>, ident: f64, op: F) -> Result<Value, RuntimeError>
         where F: Fn(f64) -> G, G: Fn(f64) -> f64
     {
@@ -238,7 +238,7 @@ pub fn load_builtins(env: &mut Scope)
         else
         {
             fold_result(args.into_iter(), num, |acc, val| map_value!(val, Number, op(acc)))
-                .map(|n| Value::Number(n))
+                .map(Value::Number)
         }
     }
 
@@ -251,7 +251,7 @@ pub fn load_builtins(env: &mut Scope)
         Ok(Value::Bool(va == vb))
     });
 
-    #[inline(always)]
+    #[inline]
     fn comp_op<F, G>(mut args: VecDeque<Value>, op_num: F, op_str: G) -> Result<Value, RuntimeError>
         where F: Fn(f64, f64) -> bool, G: Fn(&str, &str) -> bool
     {
@@ -261,7 +261,7 @@ pub fn load_builtins(env: &mut Scope)
             (Value::Number(a), Value::Number(b)) => Ok(op_num(a, b)),
             (Value::String(ref a), Value::String(ref b)) => Ok(op_str(a, b)),
             (a, b) => Err(InvalidComp(a.type_name(), b.type_name())),
-        }.map(|b| Value::Bool(b))
+        }.map(Value::Bool)
     }
 
     env.set_builtin("<", true, |args, _| comp_op(args, |a, b| a < b, |a, b| a < b));

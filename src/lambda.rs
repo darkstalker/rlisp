@@ -46,12 +46,12 @@ impl Function for Lambda
         let mut local = Scope::local(self.env.clone());
         for (name, val) in self.args.iter().zip(vals.into_iter())
         {
-            local.decl(&name, val);
+            local.decl(name, val);
         }
 
         let wenv = local.wrap();
         let mut last = Value::Nil;
-        for val in self.code.iter()
+        for val in &self.code
         {
             last = try!(val.eval(wenv.clone()));
         }
